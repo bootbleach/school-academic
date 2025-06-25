@@ -383,7 +383,7 @@
                     </div>
                     <div class="timeline-item right" data-aos="fade-left">
                         <div class="timeline-content">
-                            <h3>พ.ศ. 2549</h3>
+                            <h3>พ.ศ. 2549</h3>                                       
                             <p>สร้างสระว่ายน้ำ และผ่านการประกันคุณภาพการศึกษาจาก สมศ. เป็นครั้งแรก</p>
                         </div>
                     </div>
