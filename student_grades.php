@@ -27,7 +27,7 @@ if ($filter_ay_id === null && $academic_years->num_rows > 0) {
 
 $enrollments_data = [];
 if (!empty($filter_ay_id)) {
-    $sql_enrollments = "SELECT s.subject_code, s.subject_name, s.credits, e.score, e.grade_point
+    $sql_enrollments = "SELECT s.subject_code, s.subject_name, s.credits, e.score, e.grade
                         FROM enrollments e
                         JOIN subjects s ON e.subject_id = s.subject_id
                         JOIN classes c ON e.class_id = c.class_id
@@ -178,21 +178,8 @@ require_once 'includes/student_sidebar.php';
                                                 <td><?php echo htmlspecialchars($enroll['subject_name']); ?></td>
                                                 <td class="text-center"><?php echo htmlspecialchars(number_format($enroll['credits'], 1)); ?></td>
                                                 <td class="text-center"><?php echo htmlspecialchars($enroll['score'] ?? '-'); ?></td>
-                                                <td class="text-center">
-                                                    <?php
-                                                        // Logic to determine badge color based on grade
-                                                        $grade_point = $enroll['grade_point'];
-                                                        $badge_class = 'bg-secondary';
-                                                        $grade_display = number_format($grade_point, 2);
-
-                                                        if ($grade_point >= 3.5) $badge_class = 'bg-success';
-                                                        elseif ($grade_point >= 2.5) $badge_class = 'bg-info text-dark';
-                                                        elseif ($grade_point >= 1.5) $badge_class = 'bg-warning text-dark';
-                                                        elseif ($grade_point >= 1.0) $badge_class = 'bg-danger';
-                                                        else $badge_class = 'bg-dark'; // เกรด 0 หรือ มส.
-                                                    ?>
-                                                    <span class="badge grade-badge <?php echo $badge_class; ?>">
-                                                        <?php echo $grade_display; ?>
+                                                <td class="text-center"><?php echo htmlspecialchars($enroll['grade'] ?? '-'); ?></td>
+                                                   
                                                     </span>
                                                 </td>
                                             </tr>

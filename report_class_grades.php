@@ -29,9 +29,9 @@ $types = '';
 $where_conditions = [];
 
 $sql_fetch = "SELECT c.class_id, c.class_code, c.class_name, t.fullname AS teacher_name, ay.year AS academic_year_name
-            FROM classes c
-            LEFT JOIN teachers t ON c.teacher_id = t.teacher_id
-            LEFT JOIN academic_years ay ON c.academic_year_id = ay.acad_year_id";
+             FROM classes c
+             LEFT JOIN teachers t ON c.teacher_id = t.teacher_id
+             LEFT JOIN academic_years ay ON c.academic_year_id = ay.acad_year_id";
 
 if (!empty($search_term)) {
     $where_conditions[] = "(c.class_name LIKE ? OR c.class_code LIKE ?)";
@@ -64,10 +64,35 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt_fetch->close();
 
-$page_title = "เลือกห้องเรียนเพื่อดูรายงาน";
+$page_title = "เลือกห้องเรียนเพื่อดูวิชาที่กรอกคะแนนแล้ว";
 require_once 'includes/admin_header.php';
 require_once 'includes/admin_sidebar.php';
 ?>
+
+<style>
+.report-btn-primary {
+    background-color: #007bff; /* สีน้ำเงินหลักของ Bootstrap */
+    color: white;
+    border: 1px solid #007bff;
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    border-radius: .2rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none; /* ตรวจสอบให้แน่ใจว่าไม่มีขีดเส้นใต้จากลิงก์ */
+    display: inline-flex; /* จัดตำแหน่งไอคอนและข้อความแนวตั้ง */
+    align-items: center;
+}
+
+.report-btn-primary:hover {
+    background-color: #0056b3; /* สีน้ำเงินเข้มขึ้นเมื่อวางเมาส์ */
+    border-color: #0056b3;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 123, 255, 0.5); /* เงาเล็กน้อยเมื่อวางเมาส์ */
+}
+
+.report-btn-primary .fas {
+    margin-right: .25rem; /* ระยะห่างระหว่างไอคอนและข้อความ */
+}
+</style>
 
 <div class="content-wrapper">
     <main class="p-4">
@@ -94,7 +119,6 @@ require_once 'includes/admin_sidebar.php';
                                         $order = ($column == $current_sort && $current_order == 'ASC') ? 'desc' : 'asc';
                                         $icon = ($column == $current_sort) ? ($current_order == 'ASC' ? ' <i class="fas fa-sort-up"></i>' : ' <i class="fas fa-sort-down"></i>') : '';
                                         
-                                        // **แก้ไข:** เปลี่ยน $params เป็น $query_params
                                         $query_params = [
                                             'sort' => $column,
                                             'order' => $order,
@@ -123,7 +147,9 @@ require_once 'includes/admin_sidebar.php';
                                             <td><?php echo htmlspecialchars($class['teacher_name'] ?? 'N/A'); ?></td>
                                             <td><?php echo htmlspecialchars($class['academic_year_name'] ?? 'N/A'); ?></td>
                                             <td class="text-end">
-                                                <a href="view_report_details.php?class_id=<?php echo $class['class_id']; ?>" class="btn btn-dark btn-sm"><i class="fas fa-print me-1"></i> ดูรายงาน</a>
+                                                <a href="view_report_details.php?class_id=<?php echo $class['class_id']; ?>" class="btn btn-sm report-btn-primary">
+                                                    <i class="fas fa-print me-1"></i> ดูรายงาน
+                                                </a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
