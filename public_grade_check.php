@@ -105,9 +105,10 @@ if (isset($_GET['id_card_number']) && !empty(trim($_GET['id_card_number']))) {
                         <table class="table table-sm table-bordered" style="font-size: 0.9rem;">
                             <thead class="table-light">
                                 <tr>
-                                    <th>รหัสวิชา</th>
-                                    <th>ชื่อรายวิชา</th>
+                                    <th class="text-center">รหัสวิชา</th>
+                                    <th class="text-center">ชื่อรายวิชา</th>
                                     <th class="text-center">หน่วยกิต</th>
+                                    <th class="text-center">คะแนน</th>
                                     <th class="text-center">เกรด</th>
                                 </tr>
                             </thead>
@@ -116,15 +117,17 @@ if (isset($_GET['id_card_number']) && !empty(trim($_GET['id_card_number']))) {
                                     $term_credits = 0;
                                     $term_points = 0;
                                     foreach($subjects as $subject): 
+                                        // ตรวจสอบว่า grade_point เป็น numeric ก่อนนำไปคำนวณ เพื่อไม่รวม ผ/มผ ใน GPA
                                         if (is_numeric($subject['credits']) && is_numeric($subject['grade_point'])) {
                                             $term_credits += $subject['credits'];
                                             $term_points += ($subject['grade_point'] * $subject['credits']);
                                         }
                                 ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($subject['subject_code']); ?></td>
-                                    <td><?php echo htmlspecialchars($subject['subject_name']); ?></td>
+                                    <td class="text-center"><?php echo htmlspecialchars($subject['subject_code']); ?></td>
+                                    <td ><?php echo htmlspecialchars($subject['subject_name']); ?></td>
                                     <td class="text-center"><?php echo htmlspecialchars(number_format($subject['credits'], 1)); ?></td>
+                                    <td class="text-center"><?php echo htmlspecialchars($subject['score'] ?? '-'); ?></td>
                                     <td class="text-center fw-bold"><?php echo htmlspecialchars($subject['grade'] ?? '-'); ?></td>
                                 </tr>
                                 <?php endforeach; ?>

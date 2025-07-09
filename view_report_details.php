@@ -48,7 +48,7 @@ while($row = $grade_result->fetch_assoc()) {
     $grades_map[$row['student_id']][$row['subject_id']] = $row;
 }
 
-$page_title = "รายงานผลการเรียน";
+$page_title = "รายงานคะแนนนักเรียน";
 if ($is_admin) { require_once 'includes/admin_header.php'; }
 else { require_once 'includes/teacher_header.php'; }
 ?>
@@ -96,19 +96,18 @@ else { require_once 'includes/teacher_header.php'; }
         
         /* ปรับขนาดฟอนต์สำหรับการพิมพ์ */
         .grade-table {
-            font-size: 9pt !important;
+            font-size: 10pt !important;
         }
         .grade-table th, .grade-table td {
-            padding: 0.15rem 0.2rem !important;
+            padding: 0.2rem 0.3rem !important;
             line-height: 1.2 !important;
         }
         
         /* ปรับขนาดคอลัมน์สำหรับการพิมพ์ */
         .col-number { width: 30px !important; }
-        .col-student-code { width: 70px !important; }
-        .col-student-name { width: 140px !important; }
-        .col-subject-data { width: 35px !important; }
-        .col-summary { width: 50px !important; }
+        .col-student-code { width: 80px !important; }
+        .col-student-name { width: 150px !important; }
+        .col-subject-data { width: 60px !important; }
         
         .d-print-none { display: none !important; }
         thead { display: table-header-group; }
@@ -116,25 +115,21 @@ else { require_once 'includes/teacher_header.php'; }
         .grade-table th, .grade-table td { 
             border: 1px solid #000 !important; 
         }
-        .table-primary, .table-success, .table-warning { 
-            background-color: transparent !important; 
-            color: #000 !important; 
-        }
         
-        /* ซ่อนคำอธิบายและสถิติตอนพิมพ์เพื่อประหยัดพื้นที่ */
+        /* ซ่อนคำอธิบายตอนพิมพ์ */
         .stats-section { display: none !important; }
     }
     
-    /* ปรับแต่งเฉพาะการแสดงผลหน้าจอ - ไม่ใช่ print */
+    /* ปรับแต่งเฉพาะการแสดงผลหน้าจอ */
     @media screen {
         .content-wrapper {
-            max-width: calc(100vw - 280px); /* ลบ sidebar width + padding */
-            overflow-x: auto; /* เพิ่ม horizontal scroll แทน */
+            max-width: calc(100vw - 280px);
+            overflow-x: auto;
         }
 
         .main-container {
             max-width: 100%;
-            padding-right: 15px; /* เพิ่ม padding ด้านขวา */
+            padding-right: 15px;
         }
 
         .table-container {
@@ -143,69 +138,62 @@ else { require_once 'includes/teacher_header.php'; }
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             border-radius: 8px;
             margin-bottom: 20px;
-            /* ลบ position: relative หรือ absolute ที่อาจทำให้เบียด */
         }
     }
     
     .grade-table {
-        font-size: 13px;
+        font-size: 14px;
         font-family: 'Sarabun', sans-serif;
         border-collapse: collapse;
         width: 100%;
         margin: 0;
-        table-layout: fixed; /* ใช้ fixed layout เพื่อควบคุมความกว้างคอลัมน์ */
-        min-width: 1200px; /* กำหนดความกว้างขั้นต่ำเพื่อไม่ให้แคบเกินไป */
+        table-layout: fixed;
+        min-width: 800px; /* ลดความกว้างเนื่องจากมีคอลัมน์น้อยลง */
     }
     
     .table-bordered th, .table-bordered td {
         vertical-align: middle;
-        padding: 0.4rem 0.3rem;
+        padding: 0.5rem 0.4rem;
         border: 1px solid #dee2e6;
         text-align: center;
     }
     
-    /* กำหนดความกว้างคอลัมน์แบบแน่นอน */
+    /* กำหนดความกว้างคอลัมน์ */
     .col-number { 
-        width: 40px; 
-        min-width: 40px;
-        max-width: 40px;
-    }
-    
-    .col-student-code { 
-        width: 100px;
-        min-width: 100px;
-        max-width: 100px;
-    }
-    
-    .col-student-name { 
-        width: 180px;
-        min-width: 180px;
-        max-width: 180px;
-        text-align: left !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding-left: 0.5rem !important;
-    }
-    
-    .col-subject-data { 
-        width: 50px;
+        width: 50px; 
         min-width: 50px;
         max-width: 50px;
     }
     
-    .col-summary { 
-        width: 70px;
-        min-width: 70px;
-        max-width: 70px;
+    .col-student-code { 
+        width: 120px;
+        min-width: 120px;
+        max-width: 120px;
+    }
+    
+    .col-student-name { 
+        width: 200px;
+        min-width: 200px;
+        max-width: 200px;
+        text-align: left !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-left: 0.6rem !important;
+    }
+    
+    .col-subject-data { 
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
         font-weight: bold;
     }
 
     /* จัดการ header วิชา */
     .subject-header {
-        padding: 0.3rem 0.2rem !important;
-        font-size: 12px;
-        line-height: 1.2;
+        padding: 0.4rem 0.3rem !important;
+        font-size: 13px;
+        line-height: 1.3;
     }
 
     .subject-name {
@@ -214,24 +202,10 @@ else { require_once 'includes/teacher_header.php'; }
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 11px;
-        line-height: 1.1;
+        font-size: 12px;
+        line-height: 1.2;
         padding: 0;
         margin: 0;
-    }
-    
-    /* สีพื้นหลังสำหรับคอลัมน์สรุป */
-    .table-primary { 
-        background-color: #cfe2ff !important; 
-        color: #0c4085 !important;
-    }
-    .table-success { 
-        background-color: #d1e7dd !important; 
-        color: #0f5132 !important;
-    }
-    .table-warning { 
-        background-color: #fff3cd !important; 
-        color: #664d03 !important;
     }
     
     /* ปรับแต่ง thead */
@@ -244,7 +218,7 @@ else { require_once 'includes/teacher_header.php'; }
         z-index: 10;
     }
     
-    /* จัดการข้อความที่ยาวในช่องชื่อ - เพิ่ม tooltip */
+    /* จัดการข้อความที่ยาวในช่องชื่อ */
     .student-name-cell {
         position: relative;
         cursor: help;
@@ -275,25 +249,7 @@ else { require_once 'includes/teacher_header.php'; }
         background-color: #e9ecef;
     }
     
-    /* ปรับแต่งส่วนสถิติ */
-    .stats-section .card {
-        height: 100%;
-    }
-    
-    .stats-section .card-body {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    
-    /* ปรับปุ่มพิมพ์ */
-    .btn-print {
-        background: linear-gradient(45deg, #28a745, #20c997);
-        border: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-    }
-    
+   
     .btn-print:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -302,14 +258,37 @@ else { require_once 'includes/teacher_header.php'; }
     /* เพิ่มการ responsive */
     @media screen and (max-width: 1400px) {
         .content-wrapper {
-            max-width: calc(100vw - 250px); /* ปรับให้เหมาะกับหน้าจอเล็กลง */
+            max-width: calc(100vw - 250px);
         }
     }
     
     @media screen and (max-width: 1200px) {
         .grade-table {
+            font-size: 13px;
+            min-width: 700px;
+        }
+        
+        .col-student-name {
+            width: 170px;
+            min-width: 170px;
+            max-width: 170px;
+        }
+        
+        .col-subject-data {
+            width: 70px;
+            min-width: 70px;
+            max-width: 70px;
+        }
+        
+        .content-wrapper {
+            max-width: calc(100vw - 200px);
+        }
+    }
+    
+    @media screen and (max-width: 992px) {
+        .grade-table {
             font-size: 12px;
-            min-width: 1000px; /* ลดความกว้างขั้นต่ำ */
+            min-width: 600px;
         }
         
         .col-student-name {
@@ -319,35 +298,6 @@ else { require_once 'includes/teacher_header.php'; }
         }
         
         .col-subject-data {
-            width: 45px;
-            min-width: 45px;
-            max-width: 45px;
-        }
-        
-        .content-wrapper {
-            max-width: calc(100vw - 200px); /* ปรับให้เหมาะกับ sidebar ที่เล็กลง */
-        }
-    }
-    
-    @media screen and (max-width: 992px) {
-        .grade-table {
-            font-size: 11px;
-            min-width: 900px;
-        }
-        
-        .col-student-name {
-            width: 130px;
-            min-width: 130px;
-            max-width: 130px;
-        }
-        
-        .col-subject-data {
-            width: 40px;
-            min-width: 40px;
-            max-width: 40px;
-        }
-        
-        .col-summary {
             width: 60px;
             min-width: 60px;
             max-width: 60px;
@@ -358,16 +308,32 @@ else { require_once 'includes/teacher_header.php'; }
         }
     }
 
-    /* สำหรับหน้าจอที่เล็กมาก */
     @media screen and (max-width: 768px) {
         .content-wrapper {
-            max-width: calc(100vw - 20px); /* เผื่อ padding */
+            max-width: calc(100vw - 20px);
         }
         
         .main-container {
             padding-left: 10px;
             padding-right: 10px;
         }
+    }
+    
+    /* สไตล์สำหรับข้อมูลคะแนน */
+    .score-cell {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .score-cell.has-score {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .score-cell.no-score {
+        background-color: #f8d7da;
+        color: #721c24;
     }
 </style>
 <?php
@@ -378,12 +344,9 @@ else { require_once 'includes/teacher_sidebar.php'; }
     <main class="p-4">
         <div class="main-container">
             <div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
-                <h1><i class="fas fa-print me-2"></i><?php echo htmlspecialchars($page_title); ?></h1>
+                <h1><i class="fas fa-clipboard-list me-2"></i><?php echo htmlspecialchars($page_title); ?></h1>
                 <div>
-                    <button onclick="window.print();" class="btn btn-success btn-print">
-                        <i class="fas fa-print me-1"></i>พิมพ์รายงาน
-                    </button>
-                    <a href="<?php echo $is_admin ? 'report_class_grades.php' : 'teacher_homeroom_report.php'; ?>" class="btn btn-secondary">
+                        <a href="<?php echo $is_admin ? 'report_class_grades.php' : 'teacher_homeroom_report.php'; ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i>กลับไปหน้ารายการ
                     </a>
                 </div>
@@ -391,7 +354,7 @@ else { require_once 'includes/teacher_sidebar.php'; }
             
             <div class="printable-area">
                 <div class="text-center mb-4">
-                    <h4>ผลการเรียนประจำภาคเรียน <?php echo htmlspecialchars($class_info['academic_year_name']); ?></h4>
+                    <h4>รายงานคะแนนนักเรียน ประจำภาคเรียน <?php echo htmlspecialchars($class_info['academic_year_name']); ?></h4>
                     <h5>ห้องเรียน <?php echo htmlspecialchars($class_info['class_name']); ?></h5>
                 </div>
                 <div class="card">
@@ -400,30 +363,21 @@ else { require_once 'includes/teacher_sidebar.php'; }
                             <table class="table table-bordered grade-table">
                                 <thead class="table-light text-center">
                                      <tr>
-                                        <th class="align-middle col-number" rowspan="2">#</th>
-                                        <th class="align-middle col-student-code" rowspan="2">รหัสนักเรียน</th>
-                                        <th class="align-middle col-student-name" rowspan="2">ชื่อ-นามสกุล</th>
+                                        <th class="align-middle col-number">#</th>
+                                        <th class="align-middle col-student-code">รหัสนักเรียน</th>
+                                        <th class="align-middle col-student-name">ชื่อ-นามสกุล</th>
                                         <?php foreach($subjects_in_class as $subject): ?>
-                                            <th colspan="2" class="subject-header">
+                                            <th class="subject-header col-subject-data">
                                                 <div class="subject-name" title="<?php echo htmlspecialchars($subject['subject_name']); ?>">
                                                     <?php echo htmlspecialchars($subject['subject_name']); ?>
                                                 </div>
                                             </th>
                                         <?php endforeach; ?>
-                                        <th class="align-middle col-summary" rowspan="2">คะแนนรวม</th>
-                                        <th class="align-middle col-summary" rowspan="2">ร้อยละ (%)</th>
-                                        <th class="align-middle col-summary" rowspan="2">เกรดเฉลี่ย</th>
-                                    </tr>
-                                    <tr>
-                                        <?php foreach($subjects_in_class as $subject): ?>
-                                            <th class="subject-header col-subject-data">คะแนน</th>
-                                            <th class="subject-header col-subject-data">เกรด</th>
-                                        <?php endforeach; ?>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php if(empty($students)): ?>
-                                        <tr><td colspan="<?php echo (count($subjects_in_class) * 2) + 6; ?>" class="text-center py-3">ไม่พบนักเรียนในห้องนี้</td></tr>
+                                        <tr><td colspan="<?php echo count($subjects_in_class) + 3; ?>" class="text-center py-3">ไม่พบนักเรียนในห้องนี้</td></tr>
                                     <?php else: ?>
                                         <?php foreach($students as $index => $student): ?>
                                         <tr>
@@ -433,38 +387,21 @@ else { require_once 'includes/teacher_sidebar.php'; }
                                                 data-full-name="<?php echo htmlspecialchars($student['prefix'].$student['first_name'].' '.$student['last_name']); ?>">
                                                 <?php echo htmlspecialchars($student['prefix'].$student['first_name'].' '.$student['last_name']); ?>
                                             </td>
-                                            <?php
-                                                $student_total_credits = 0; $student_total_points = 0; $student_total_score = 0; $subjects_with_scores = 0;
-                                                foreach($subjects_in_class as $subject): 
-                                                    $grade_info = $grades_map[$student['student_id']][$subject['subject_id']] ?? null;
-                                                    $display_score = '-'; $display_grade = '-';
-                                                    if ($grade_info && isset($grade_info['score']) && is_numeric($grade_info['score'])) {
-                                                        $score = (float)$grade_info['score'];
-                                                        $display_score = number_format($score, 0);
-                                                        $student_total_score += $score;
-                                                        $subjects_with_scores++;
-                                                        $calculated_grade = calculate_grade_from_score($score, $subject['credits']);
-                                                        if ($calculated_grade['grade_point'] !== null) {
-                                                            $display_grade = ($calculated_grade['grade_point'] == 0.00) ? 'ร' : number_format($calculated_grade['grade_point'], 2);
-                                                        } else {
-                                                            $display_grade = $calculated_grade['grade'];
-                                                        }
-                                                        if ((float)$subject['credits'] > 0 && $calculated_grade['grade_point'] !== null) {
-                                                            $student_total_credits += $subject['credits'];
-                                                            $student_total_points += ($calculated_grade['grade_point'] * $subject['credits']);
-                                                        }
-                                                    }
+                                            <?php foreach($subjects_in_class as $subject): 
+                                                $grade_info = $grades_map[$student['student_id']][$subject['subject_id']] ?? null;
+                                                $display_score = '-';
+                                                $cell_class = 'score-cell no-score';
+                                                
+                                                if ($grade_info && isset($grade_info['score']) && is_numeric($grade_info['score'])) {
+                                                    $score = (float)$grade_info['score'];
+                                                    $display_score = number_format($score, 0);
+                                                    $cell_class = 'score-cell has-score';
+                                                }
                                             ?>
-                                                <td class="text-center col-subject-data"><?php echo $display_score; ?></td>
-                                                <td class="text-center col-subject-data fw-bold"><?php echo $display_grade; ?></td>
-                                            <?php endforeach; 
-                                                $total_subjects_count = count($subjects_in_class);
-                                                $student_percentage = ($total_subjects_count > 0) ? ($student_total_score / $total_subjects_count) : 0;
-                                                $student_gpa = ($student_total_credits > 0) ? ($student_total_points / $student_total_credits) : 0;
-                                            ?>
-                                            <td class="text-center col-summary table-primary fw-bold"><?php echo number_format($student_total_score, 0); ?></td>
-                                            <td class="text-center col-summary table-success fw-bold"><?php echo number_format($student_percentage, 2); ?></td>
-                                            <td class="text-center col-summary table-warning fw-bold"><?php echo number_format($student_gpa, 2); ?></td>
+                                                <td class="text-center col-subject-data <?php echo $cell_class; ?>">
+                                                    <?php echo $display_score; ?>
+                                                </td>
+                                            <?php endforeach; ?>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
@@ -475,51 +412,52 @@ else { require_once 'includes/teacher_sidebar.php'; }
                 </div>
                 
                 <div class="row mt-4 stats-section">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="card">
-                            <div class="card-header"><h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>เกณฑ์การให้เกรด</h6></div>
-                            <div class="card-body p-3">
-                                <div class="row">
-                                    <div class="col-6"><small>A = 80-100 (4.00)<br>B+ = 75-79 (3.50)<br>B = 70-74 (3.00)<br>C+ = 65-69 (2.50)</small></div>
-                                    <div class="col-6"><small>C = 60-64 (2.00)<br>D+ = 55-59 (1.50)<br>D = 50-54 (1.00)<br>ร = 0-49 (0.00)</small></div>
-                                </div>
-                                <hr class="my-2">
-                                <small class="text-muted"><strong>หมายเหตุ:</strong> วิชาที่ไม่มีหน่วยกิต จะแสดงผล "ผ" (ผ่าน) หรือ "มผ" (ไม่ผ่าน)</small>
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>สถิติข้อมูลคะแนน</h6>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header"><h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>สถิติห้องเรียน</h6></div>
                             <div class="card-body p-3">
                                 <?php
-                                $total_students = count($students); $total_subjects = count($subjects_in_class); $class_total_score = 0; $class_total_gpa = 0; $students_with_gpa = 0;
+                                $total_students = count($students);
+                                $total_subjects = count($subjects_in_class);
+                                $total_possible_scores = $total_students * $total_subjects;
+                                $scores_entered = 0;
+                                
                                 foreach($students as $student) {
-                                    $student_total_credits = 0; $student_total_points = 0; $student_score_sum = 0;
                                     foreach($subjects_in_class as $subject) {
                                         $grade_info = $grades_map[$student['student_id']][$subject['subject_id']] ?? null;
                                         if ($grade_info && isset($grade_info['score']) && is_numeric($grade_info['score'])) {
-                                            $score = (float)$grade_info['score'];
-                                            $student_score_sum += $score;
-                                            $calculated_grade = calculate_grade_from_score($score, $subject['credits']);
-                                            if ((float)$subject['credits'] > 0 && $calculated_grade['grade_point'] !== null) {
-                                                $student_total_credits += $subject['credits'];
-                                                $student_total_points += ($calculated_grade['grade_point'] * $subject['credits']);
-                                            }
+                                            $scores_entered++;
                                         }
                                     }
-                                    if ($total_subjects > 0) { $class_total_score += ($student_score_sum / $total_subjects); }
-                                    if ($student_total_credits > 0) { $class_total_gpa += ($student_total_points / $student_total_credits); $students_with_gpa++; }
                                 }
-                                $class_avg_score = ($total_students > 0) ? ($class_total_score / $total_students) : 0;
-                                $class_avg_gpa = ($students_with_gpa > 0) ? ($class_total_gpa / $students_with_gpa) : 0;
+                                
+                                $completion_percentage = ($total_possible_scores > 0) ? ($scores_entered / $total_possible_scores) * 100 : 0;
                                 ?>
-                                <small>
-                                    <strong>จำนวนนักเรียน:</strong> <?php echo $total_students; ?> คน<br>
-                                    <strong>จำนวนวิชา:</strong> <?php echo $total_subjects; ?> วิชา<br>
-                                    <strong>คะแนนเฉลี่ยห้อง:</strong> <?php echo number_format($class_avg_score, 2); ?>%<br>
-                                    <strong>เกรดเฉลี่ยห้อง:</strong> <?php echo number_format($class_avg_gpa, 2); ?>
-                                </small>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <small><strong>จำนวนนักเรียน:</strong> <?php echo $total_students; ?> คน</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small><strong>จำนวนวิชา:</strong> <?php echo $total_subjects; ?> วิชา</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small><strong>คะแนนที่บันทึกแล้ว:</strong> <?php echo $scores_entered; ?>/<?php echo $total_possible_scores; ?></small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small><strong>ความสมบูรณ์:</strong> <?php echo number_format($completion_percentage, 1); ?>%</small>
+                                    </div>
+                                </div>
+                                <hr class="my-2">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i><strong>สีเขียว:</strong> มีคะแนน</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-danger"><i class="fas fa-times-circle me-1"></i><strong>สีแดง:</strong> ยังไม่มีคะแนน</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

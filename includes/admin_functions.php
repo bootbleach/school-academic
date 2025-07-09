@@ -77,19 +77,19 @@ function calculate_grade_from_score($score, $credits = 1.0) { // เพิ่ม
     // --- ถ้าไม่ใช่ 0 หน่วยกิต ให้ใช้เกณฑ์ปกติ ---
     else {
         if ($score >= 80) {
-            return ['grade' => 'A', 'grade_point' => 4.00];
+            return ['grade' => '4', 'grade_point' => 4.00];
         } elseif ($score >= 75) {
-            return ['grade' => 'B+', 'grade_point' => 3.50];
+            return ['grade' => '3.5', 'grade_point' => 3.50];
         } elseif ($score >= 70) {
-            return ['grade' => 'B', 'grade_point' => 3.00];
+            return ['grade' => '3', 'grade_point' => 3.00];
         } elseif ($score >= 65) {
-            return ['grade' => 'C+', 'grade_point' => 2.50];
+            return ['grade' => '2.5', 'grade_point' => 2.50];
         } elseif ($score >= 60) {
-            return ['grade' => 'C', 'grade_point' => 2.00];
+            return ['grade' => '2', 'grade_point' => 2.00];
         } elseif ($score >= 55) {
-            return ['grade' => 'D+', 'grade_point' => 1.50];
+            return ['grade' => '1.5', 'grade_point' => 1.50];
         } elseif ($score >= 50) {
-            return ['grade' => 'D', 'grade_point' => 1.00];
+            return ['grade' => '1', 'grade_point' => 1.00];
         } else {
             return ['grade' => 'ร', 'grade_point' => 0.00];
         }

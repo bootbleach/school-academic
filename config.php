@@ -4,7 +4,7 @@
 define('DB_SERVER', 'localhost'); // หรือ IP Address ของ Database Server
 define('DB_USERNAME', 'root');    // ชื่อผู้ใช้งานฐานข้อมูล (เปลี่ยนเป็นชื่อผู้ใช้จริงของคุณ)
 define('DB_PASSWORD', '');        // รหัสผ่านฐานข้อมูล (เปลี่ยนเป็นรหัสผ่านจริงของคุณ)
-define('DB_NAME', 'metta_academic_db'); // ชื่อ Database ที่สร้างเมื่อกี้
+define('DB_NAME', 'metta_academic'); // ชื่อ Database ที่สร้างเมื่อกี้
 
 // สร้าง Connection
 $mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
