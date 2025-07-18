@@ -3,579 +3,871 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โรงเรียนเมตตาวิทยา | Metta Wittaya School</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
+    <title>โรงเรียนเมตตาวิทยา</title>
     <style>
-        /* CSS Reset & Basic Setup */
         :root {
-            --primary-color: #5D3A9B; /* ม่วง */
-            --secondary-color: #FFD700; /* เหลือง */
-            --dark-color: #333;
-            --light-color: #f9f9f9;
-            --white-color: #ffffff;
-            --text-color: #4A4A4A;
+            --primary-color: #6a0dad; /* สีม่วงหลัก */
+            --secondary-color: #ffd700; /* สีเหลืองทอง */
+            --light-color: #f5e6ff; /* ม่วงอ่อน */
+            --dark-color: #4b0082; /* ม่วงเข้ม */
+            --text-color: #333;
+            --white: #ffffff;
+            --pastel-bg: #f8f5ff; /* สีพาสเทลม่วงอ่อนสำหรับพื้นหลัง */
+            --pastel-section: #f0e9ff; /* สีพาสเทลสำหรับส่วนต่างๆ */
+            --nav-bg: #f9f0ff; /* สีพาสเทลสำหรับ Navigation */
+            --button-color: #d4b8ff; /* สีพาสเทลสำหรับปุ่ม */
         }
-
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--white-color);
-            color: var(--text-color);
-            line-height: 1.7;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        section {
-            padding: 80px 0;
-        }
-
-        h1, h3 {
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-
-        /* Enhanced H2 Styling */
-        h2 {
-            font-size: 2.8rem; /* Slightly larger */
-            text-align: center;
-            margin-bottom: 70px; /* More space below heading */
-            position: relative;
-            padding-bottom: 10px; /* Space for the underline */
-            color: var(--primary-color);
-        }
-
-        h2::after {
-            content: '';
-            position: absolute;
-            width: 80px; /* Length of the underline */
-            height: 4px;
-            background-color: var(--secondary-color); /* Yellow underline */
-            left: 50%;
-            transform: translateX(-50%);
-            bottom: 0;
-            border-radius: 2px;
+            font-family: 'Kanit', 'Sarabun', sans-serif;
         }
         
-        /* Navigation Bar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        body {
+            background-color: var(--pastel-bg);
+            color: var(--text-color);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        /* Navigation */
+        header {
+            background-color: var(--nav-bg);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
-            padding: 10px 50px;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
+            top: 0;
             z-index: 1000;
             transition: all 0.3s ease;
         }
-
-        .navbar.scrolled {
-            padding: 5px 50px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
         }
-
-        .navbar .logo img {
-            height: 50px;
-            transition: height 0.3s ease;
-        }
-
-        .navbar.scrolled .logo img {
-            height: 40px;
-        }
-
-        .navbar .nav-links {
-            list-style: none;
+        
+        .logo-container {
             display: flex;
             align-items: center;
         }
-
-        .navbar .nav-links li {
-            margin-left: 30px;
-        }
-
-        .navbar .nav-links a {
-            text-decoration: none;
-            color: var(--dark-color);
-            font-weight: 500;
-            transition: color 0.3s ease, transform 0.2s ease; /* Add transform to transition */
-        }
-
-        /* Enhanced Navigation Links Hover */
-        .navbar .nav-links a:hover,
-        .navbar .nav-links a.active {
-            color: var(--primary-color);
-            transform: translateY(-2px); /* Lift slightly on hover */
-        }
-
-        /* Enhanced CTA Button */
-        .cta-button {
-            background-color: var(--primary-color);
-            color: var(--white-color);
-            padding: 12px 25px; /* Slightly more padding */
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700; /* Bolder font */
-            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; /* Add box-shadow to transition */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Initial shadow */
-            letter-spacing: 0.5px; /* Improve readability */
-        }
-        .cta-button:hover {
-            background-color: #4a2d7a; /* Darker shade on hover */
-            transform: translateY(-3px); /* More pronounced lift */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Larger shadow on hover */
+        
+        .logo {
+            height: 60px;
+            margin-right: 15px;
         }
         
-        .menu-toggle {
+        .school-name {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 15px;
+        }
+        
+        .nav-links li {
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary-color);
+            background-color: rgba(106, 13, 173, 0.1);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-color);
+            bottom: -5px;
+            left: 0;
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        /* ปุ่มพิเศษสำหรับระบบวัดผล */
+        .login-button {
+            background: linear-gradient(45deg, var(--button-color), #a38cf2);
+            background-size: 200% 200%;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            animation: GradientBackground 4s ease infinite;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(45deg, #a38cf2, var(--button-color));
+        }
+        
+        .hamburger {
             display: none;
-            font-size: 1.5rem;
             cursor: pointer;
         }
-
+        
         /* Hero Section */
-        #hero {
+        .hero {
             height: 100vh;
+            background: linear-gradient(135deg, var(--pastel-section), var(--primary-color));
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            color: var(--white-color);
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://scontent.fphs1-1.fna.fbcdn.net/v/t39.30808-6/485309028_1166797811905348_3763208893204337953_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=86c6b0&_nc_ohc=6BT0RbsvPPQQ7kNvwHvrOIe&_nc_oc=AdkbBlAtgNRBw8lSZZ-RFXDqgFnUi8cm_0dMN0lglbIm0cCqZRYDZwvJWLgUgCEBGfU&_nc_zt=23&_nc_ht=scontent.fphs1-1.fna&_nc_gid=uwOP7etx8w696gvwFfqqkw&oh=00_AfNpnKJvFqf57Wp9f-ofX8r8had1agemryyRiGjw2pVN1w&oe=68613030') no-repeat center center/cover;
+            padding: 0 2rem;
+            margin-top: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://img5.pic.in.th/file/secure-sv1/loho.png') no-repeat;
+            background-size: contain;
+            background-position: center;
+            opacity: 0.05;
+            z-index: 0;
         }
         
         .hero-content {
+            position: relative;
+            z-index: 1;
             max-width: 800px;
-            padding: 0 20px;
-        }
-
-        /* Enhanced Hero Text */
-        .hero-content h1 {
-            font-size: 4.5rem; /* Slightly larger for impact */
-            margin-bottom: 25px;
-            color: var(--white-color);
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6); /* Stronger shadow */
-            line-height: 1.2;
         }
         
-        .hero-content .motto {
-            font-size: 2.2rem; /* Larger motto */
-            font-weight: 600; /* Bolder motto */
-            color: var(--secondary-color);
-            margin-bottom: 40px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.4); /* Add shadow to motto */
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+            animation: fadeInDown 1s ease;
         }
-
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+            animation: fadeInUp 1s ease;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: var(--dark-color);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            animation: fadeIn 1.5s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
         /* About Section */
-        #about {
-            background: var(--light-color);
+        .section {
+            padding: 5rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: var(--pastel-bg);
         }
-        .about-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            align-items: center;
-            gap: 50px;
-        }
-        .about-image img {
-            width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .about-content h3 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-        }
-        .about-content p {
-            margin-bottom: 15px;
-        }
-        .about-content .founder {
-            font-style: italic;
-            color: #555;
-            border-left: 3px solid var(--secondary-color);
-            padding-left: 15px;
-            margin-top: 20px;
-        }
-
-        /* Journey (Timeline) Section */
-        #journey {
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
             position: relative;
         }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            display: inline-block;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 4px;
+            background: var(--secondary-color);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .about-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .about-text {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .about-text h3 {
+            font-size: 1.8rem;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+        }
+        
+        .about-text p {
+            margin-bottom: 1.5rem;
+        }
+        
+        .about-image {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+        
+        .about-image img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* History Section */
+        .history {
+            background: linear-gradient(135deg, var(--pastel-section), var(--pastel-bg));
+        }
+        
         .timeline {
             position: relative;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
         }
+        
         .timeline::after {
             content: '';
             position: absolute;
-            width: 4px;
+            width: 6px;
             background-color: var(--secondary-color);
             top: 0;
             bottom: 0;
             left: 50%;
-            margin-left: -2px;
-            z-index: -1;
-            animation: grow-line 2s ease-out forwards;
-        }
-
-        @keyframes grow-line {
-            from { height: 0; }
-            to { height: 100%; }
+            margin-left: -3px;
         }
         
         .timeline-item {
             padding: 10px 40px;
             position: relative;
             width: 50%;
+            box-sizing: border-box;
         }
+        
         .timeline-item::after {
             content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
-            right: -10px;
-            background-color: var(--white-color);
+            width: 25px;
+            height: 25px;
+            background-color: var(--white);
             border: 4px solid var(--primary-color);
-            top: 25px;
             border-radius: 50%;
+            top: 15px;
             z-index: 1;
         }
-        .timeline-item.left {
+        
+        .left {
             left: 0;
         }
-        .timeline-item.right {
+        
+        .right {
             left: 50%;
         }
-        .timeline-item.right::after {
-            left: -10px;
+        
+        .left::after {
+            right: -12px;
         }
-
-        /* Enhanced Timeline Content */
-        .timeline-item.left .timeline-content {
-            border-left: 4px solid var(--primary-color); /* Emphasize left items */
-            border-right: none;
+        
+        .right::after {
+            left: -12px;
         }
-
-        .timeline-item.right .timeline-content {
-            border-right: 4px solid var(--primary-color); /* Emphasize right items */
-            border-left: none;
-        }
-
+        
         .timeline-content {
             padding: 20px 30px;
-            background-color: var(--white-color);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1); /* Stronger shadow */
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             position: relative;
-            border-radius: 8px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .timeline-content:hover {
-            transform: translateY(-5px); /* Lift on hover */
-            box-shadow: 0 10px 25px rgba(93, 58, 155, 0.15); /* More pronounced shadow */
-        }
-
-        .timeline-content h3 {
-            font-size: 1.6rem; /* Slightly larger heading */
-            margin-bottom: 10px;
-            color: var(--primary-color);
-        }
-
-        /* News Section */
-        #news { background: var(--light-color); }
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-        .news-card { background: var(--white-color); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.3s ease; }
-        .news-card:hover { transform: translateY(-10px); box-shadow: 0 8px 25px rgba(93, 58, 155, 0.1); }
-        .news-card img { width: 100%; height: 200px; object-fit: cover; }
-        .news-content { padding: 25px; }
-        .news-content h3 { font-size: 1.3rem; margin-bottom: 10px; }
-        .news-content .date { color: #999; font-size: 0.9rem; margin-bottom: 15px; }
-        .news-content a { text-decoration: none; color: var(--primary-color); font-weight: 700; }
-
-        /* Facebook Feed Styling */
-        .fb-page,
-        .fb-page span,
-        .fb-page span iframe[style] {
-            width: 100% !important;
-        }
-
-        #facebook-feed .container {
-            max-width: 100%;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-
-        /* Contact Section */
-        .contact-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-        .contact-info h3 { font-size: 2rem; margin-bottom: 20px; }
-        .contact-info p { margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: flex-start; }
         
-        /* Enhanced Contact Info Icons */
-        .contact-info i {
+        .timeline-content h3 {
             color: var(--primary-color);
-            margin-right: 18px; /* Slightly more space */
-            width: 25px; /* Ensure consistent alignment */
-            margin-top: 3px;
-            font-size: 1.3rem; /* Larger icon size */
-            text-align: center;
+            margin-bottom: 0.5rem;
         }
-        .map-container iframe { width: 100%; height: 400px; border: 0; border-radius: 10px; }
-
-        /* Enhanced Footer */
+        
+        .timeline-content p {
+            margin-bottom: 0;
+        }
+        
+        /* Facilities Section */
+        .facilities {
+            background-color: var(--pastel-bg);
+        }
+        
+        .facilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .facility-card {
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .facility-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .facility-img {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .facility-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .facility-card:hover .facility-img img {
+            transform: scale(1.1);
+        }
+        
+        .facility-info {
+            padding: 1.5rem;
+        }
+        
+        .facility-info h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Footer */
         footer {
-            background-color: var(--primary-color);
-            color: var(--white-color);
+            background: linear-gradient(135deg, var(--dark-color), var(--primary-color));
+            color: var(--white);
+            padding: 3rem 5%;
             text-align: center;
-            padding: 40px 20px; /* More padding */
-            font-size: 0.95rem;
         }
-        footer p {
-            margin-bottom: 8px; /* Space between paragraphs */
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 2rem;
         }
-        footer .credit {
-            margin-top: 15px; /* More space above credit */
-            font-size: 0.85rem;
-            opacity: 0.7;
+        
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            text-align: left;
+        }
+        
+        .footer-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .footer-section h3::after {
+            content: '';
+            position: absolute;
+            width: 50%;
+            height: 3px;
+            background: var(--secondary-color);
+            bottom: -8px;
+            left: 0;
+        }
+        
+        .footer-section p, .footer-section a {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.8rem;
+            display: block;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .contact-info {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+        }
+        
+        .contact-info i {
+            margin-right: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .social-links a:hover {
+            background: var(--secondary-color);
+            color: var(--dark-color);
+        }
+        
+        .copyright {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+        }
+        
+        /* เพิ่มสไตล์สำหรับโลโก้ใน Hero Section */
+        .hero-logo {
+            width: 400px;
+            height: auto;
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite, fadeIn 1.5s ease;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2));
         }
 
+        /* เพิ่มอนิเมชั่นการลอย */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes GradientBackground {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+        
         /* Responsive Design */
         @media (max-width: 992px) {
-            .navbar { padding: 10px 20px; }
-            .about-wrapper { grid-template-columns: 1fr; }
-            .about-image { display: none; } /* Hide image on smaller screens to save space */
-            .contact-wrapper { grid-template-columns: 1fr; }
+            .timeline::after {
+                left: 31px;
+            }
+            
+            .timeline-item {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            
+            .timeline-item::after {
+                left: 18px;
+            }
+            
+            .left::after, .right::after {
+                left: 18px;
+            }
+            
+            .right {
+                left: 0%;
+            }
         }
         
         @media (max-width: 768px) {
-            h1 { font-size: 3rem; }
-            h2 { font-size: 2rem; }
-            .hero-content .motto { font-size: 1.5rem; }
-
-            .menu-toggle { display: block; }
-            .navbar .nav-links { display: none; flex-direction: column; position: absolute; top: 70px; left: 0; width: 100%; background: var(--white-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 20px 0; }
-            .navbar .nav-links.active { display: flex; }
-            .navbar .nav-links li { margin: 15px 0; text-align: center; }
-            .navbar .nav-links .cta-button { margin: 15px auto 0 auto; display: block; width: fit-content; }
+            .nav-links {
+                position: fixed;
+                top: 80px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 80px);
+                background: var(--nav-bg);
+                flex-direction: column;
+                align-items: center;
+                padding: 2rem 0;
+                transition: all 0.5s ease;
+            }
             
-            /* Timeline Responsive */
-            .timeline::after { left: 20px; }
-            .timeline-item { width: 100%; padding-left: 60px; padding-right: 10px; }
-            .timeline-item.left, .timeline-item.right { left: 0; }
-            .timeline-item::after { left: 10px; }
+            .nav-links.active {
+                left: 0;
+            }
+            
+            .nav-links li {
+                margin: 1rem 0;
+            }
+            
+            .hamburger {
+                display: block;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .section-title h2 {
+                font-size: 2rem;
+            }
+            
+            .hero-logo {
+                width: 120px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                padding: 0.6rem 1.5rem;
+            }
+            
+            .section {
+                padding: 3rem 5%;
+            }
+            
+            .hero-logo {
+                width: 100px;
+            }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-
-    <nav class="navbar" id="navbar">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <a href="#hero" class="logo" style="display: flex; align-items: center; gap: 5px; text-decoration: none;">
-                <img src="https://img5.pic.in.th/file/secure-sv1/loho.png" alt="โลโก้โรงเรียนเมตตาวิทยา" style="height: 40px;">
-                <span style="color: black; font-weight: bold; font-family: Arial, sans-serif; text-decoration: none;">METTAWITTAYA SCHOOL</span>
-            </a>
-            
-            <div class="menu-toggle" id="menu-toggle">
+    <!-- Navigation -->
+    <header>
+        <nav>
+            <div class="logo-container">
+                <img src="https://img5.pic.in.th/file/secure-sv1/loho.png" alt="โลโก้โรงเรียนเมตตาวิทยา" class="logo">
+                <div class="school-name">โรงเรียนเมตตาวิทยา</div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">หน้าแรก</a></li>
+                <li><a href="#about">เกี่ยวกับโรงเรียน</a></li>
+                <li><a href="#history">ประวัติ</a></li>
+                <li><a href="#facilities">อาคารสถานที่</a></li>
+                <li><a href="#contact">ติดต่อเรา</a></li>
+                <li><a href="academic_index.php" class="login-button">ระบบวัดผลประเมินผลนักเรียน</a></li>
+            </ul>
+            <div class="hamburger">
                 <i class="fas fa-bars"></i>
             </div>
-            
-            <ul class="nav-links" id="nav-links">
-                <li><a href="#hero" class="active">หน้าแรก</a></li>
-                <li><a href="#about">เกี่ยวกับเรา</a></li>
-                <li><a href="#journey">เส้นทางของเรา</a></li>
-                <li><a href="#news">ข่าวสาร</a></li>
-                <li><a href="#contact">ติดต่อเรา</a></li>
-                <li>
-                    <a href="academic_index.php" class="cta-button" style="background-color: #6a1b9a; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;">
-                        <i class="fas fa-sign-in-alt"></i> ระบบ Metta Academic
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <section id="hero">
-        <div class="hero-content" data-aos="fade-up">
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <img src="https://img5.pic.in.th/file/secure-sv1/loho.png" alt="โลโก้โรงเรียนเมตตาวิทยา" class="hero-logo">
             <h1>โรงเรียนเมตตาวิทยา</h1>
-            <p class="motto">"ต้นแบบคนดี ศักดิ์ศรีแห่งเมตตา"</p>
+            <p>จังหวัดเพชรบูรณ์ เป็นโรงเรียนเอกชน ประเภทสามัญศึกษาขนาดใหญ่ สังกัดสำนักงานคณะกรรมการส่งเสริมการศึกษาเอกชน กระทรวงศึกษาธิการ</p>
+            <a href="#about" class="btn">เรียนรู้เพิ่มเติม</a>
         </div>
     </section>
 
-    <main>
-        <section id="about">
-            <div class="container">
-                <h2 data-aos="fade-up">เกี่ยวกับเมตตาวิทยา</h2>
-                <div class="about-wrapper">
-                    <div class="about-image" data-aos="fade-right">
-                        <img src="https://img5.pic.in.th/file/secure-sv1/loho.png" alt="โรงเรียนเมตตาวิทยา">
-                    </div>
-                    <div class="about-content" data-aos="fade-left">
-                        <h3>สถาบันแห่งการเรียนรู้ คู่คุณธรรม</h3>
-                        <p>
-                            โรงเรียนเมตตาวิทยา จังหวัดเพชรบูรณ์ เป็นโรงเรียนเอกชน ประเภทสามัญศึกษาขนาดใหญ่ สังกัดสำนักงานคณะกรรมการส่งเสริมการศึกษาเอกชน เปิดทำการเรียนการสอนตั้งแต่ระดับเตรียมปฐมวัย, ปฐมวัย, ประถมศึกษา และมัธยมศึกษา (อ.1 - ม.6)
-                        </p>
-                        <p>
-                            เรามุ่งมั่นที่จะเป็นสถาบันการศึกษาที่สามารถรองรับและให้บริการนักเรียนในพื้นที่และอำเภอใกล้เคียงให้ได้รับการศึกษาขั้นพื้นฐานอย่างมีคุณภาพและต่อเนื่อง
-                        </p>
-                        <div class="founder">
-                            ก่อตั้งเมื่อวันที่ 1 พฤษภาคม 2545<br>
-                            โดยมี <strong>อาจารย์จิตรา ชนะวาที</strong> เป็นผู้รับใบอนุญาตและผู้อำนวยการ
-                        </div>
-                    </div>
+    <!-- About Section -->
+    <section class="section" id="about">
+        <div class="section-title">
+            <h2>เกี่ยวกับโรงเรียน</h2>
+        </div>
+        <div class="about-content">
+            <div class="about-text">
+                <h3>โรงเรียนเมตตาวิทยา</h3>
+                <p>ตั้งอยู่ในพื้นที่ของสำนักงานเขตพื้นที่การศึกษาประถมศึกษาเพชรบูรณ์เขต ๒ เปิดสอนตั้งแต่ระดับเตรียมปฐมวัย ระดับปฐมวัย ระดับประถมศึกษาและมัธยมศึกษา (อ.1-ม.6) ก่อตั้งเมื่อวันที่ 1 พฤษภาคม 2545 โดยมีอาจารย์เรือน ชนะวาที เป็นผู้จัดการ และอาจารย์จิตรา ชนะวาที เป็นผู้รับใบอนุญาตและผู้อำนวยการ</p>
+                <p>โรงเรียนเมตตาวิทยา มีการจัดการเรียนการสอนตั้งแต่ชั้นเตรียมอนุบาล จนถึงชั้นมัธยมศึกษาปีที่ 6 โดยในระดับชั้นมัธยมศึกษาตอนปลายมีการจัดการเรียนการสอนในสายสามัญ ซึ่งมี 2 สาย คือ วิทย์-คณิต และศิลป์-สังคม</p>
+                <a href="#history" class="btn">ประวัติโรงเรียน</a>
+            </div>
+            <div class="about-image">
+                <img src="https://scontent.fphs1-1.fna.fbcdn.net/v/t39.30808-6/416299918_842506054340005_3794648078164921189_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=1CZbQCXdwHEQ7kNvwFECo9K&_nc_oc=AdkwRuJULug_Yt-xS40jTJ2ikcUkUY1boqMUJ6FJAUaogFw5bLv2CwiEzqkmRqdf8V0&_nc_zt=23&_nc_ht=scontent.fphs1-1.fna&_nc_gid=XAznFh-0mlyd0Gxl_1PJvg&oh=00_AfRB1Clg8JwVZnbQbm4nTArJzG3C7jWIhrqKu5bhh4_C7g&oe=6873E072" alt="โรงเรียนเมตตาวิทยา">
+            </div>
+        </div>
+    </section>
+
+    <!-- History Section -->
+    <section class="section history" id="history">
+        <div class="section-title">
+            <h2>ประวัติโรงเรียน</h2>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item left">
+                <div class="timeline-content">
+                    <h3>ปีการศึกษา 2545</h3>
+                    <p>ผู้บริหารได้ซื้อที่ดินจำนวน 8 ไร่ และได้สร้างอาคารเรียนหลังแรก โดยเปิดทำการเรียนการสอนตั้งแต่ระดับปฐมวัยจนถึงระดับมัธยมศึกษาปีที่ 1</p>
                 </div>
             </div>
-        </section>
-
-        <section id="journey">
-            <div class="container">
-                <h2 data-aos="fade-up">เส้นทางของเรา</h2>
-                <div class="timeline">
-                    <div class="timeline-item left" data-aos="fade-right">
-                        <div class="timeline-content">
-                            <h3>พ.ศ. 2545</h3>
-                            <p>ก่อตั้งโรงเรียนบนที่ดิน 8 ไร่ เปิดสอนตั้งแต่ระดับปฐมวัยถึงมัธยมศึกษาปีที่ 1</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item right" data-aos="fade-left">
-                        <div class="timeline-content">
-                            <h3>พ.ศ. 2549</h3>                           
-                            <p>สร้างสระว่ายน้ำ และผ่านการประกันคุณภาพการศึกษาจาก สมศ. เป็นครั้งแรก</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item left" data-aos="fade-right">
-                        <div class="timeline-content">
-                            <h3>พ.ศ. 2551</h3>
-                            <p>ได้รับรางวัลโรงเรียนส่งเสริมสุขภาพระดับทอง และเริ่มเปิดสอนระดับมัธยมศึกษาตอนปลาย</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item right" data-aos="fade-left">
-                        <div class="timeline-content">
-                            <h3>พ.ศ. 2552</h3>
-                            <p>ได้รับรางวัลพระราชทาน "เสาเสมาธรรมจักร" สถานศึกษาที่ทำคุณประโยชน์ต่อพระพุทธศาสนา</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item left" data-aos="fade-right">
-                        <div class="timeline-content">
-                            <h3>พ.ศ. 2555</h3>
-                            <p>ฉลอง "1 ทศวรรษ เมตตาวิทยา" นักเรียนได้รับรางวัลระดับโลกและระดับชาติมากมาย</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item right" data-aos="fade-left">
-                        <div class="timeline-content">
-                            <h3>พ.ศ. 2556 - ปัจจุบัน</h3>
-                            <p>พัฒนาอย่างไม่หยุดยั้ง สร้างอาคารเพิ่มเติม คว้ารางวัลนักเรียนพระราชทาน และรางวัลระดับประเทศต่อเนื่อง</p>
-                        </div>
-                    </div>
+            <div class="timeline-item right">
+                <div class="timeline-content">
+                    <h3>ปีการศึกษา 2546</h3>
+                    <p>ได้สร้างอาคารเรียนอีก 1 หลัง เพื่อรองรับนักเรียนที่มีจำนวนมากขึ้น</p>
                 </div>
             </div>
-        </section>
-
-
-        <section id="news">
-            <div class="container">
-                <h2 data-aos="fade-up">ข่าวสารและกิจกรรม</h2>
-                <body>
-
-                <div id="fb-root"></div>
-                <script async defer crossorigin="anonymous" 
-                    src="https://connect.facebook.net/th_TH/sdk.js#xfbml=1&version=v19.0&appId=YOUR_APP_ID" 
-                    nonce="yourNonceHere"></script>
-
-                <main>
-                    <section id="facebook-feed">
-                        <div class="container">
-                            <div class="fb-page" 
-                                data-href="https://www.facebook.com/p/โรงเรียนเมตตาวิทยา-100057254208065/" 
-                                data-tabs="timeline" 
-                                data-width="1000" 
-                                data-height="700" 
-                                data-small-header="false" 
-                                data-adapt-container-width="false" 
-                                data-hide-cover="false" 
-                                data-show-facepile="true">
-                            </div>
-                        </div>
-                    </section>
-                </main>
-            </div>
-        </section>
-    </main>
-
-    <section id="contact">
-        <div class="container">
-            <h2 data-aos="fade-up">ติดต่อเรา</h2>
-            <div class="contact-wrapper">
-                <div class="contact-info" data-aos="fade-right">
-                    <h3>โรงเรียนเมตตาวิทยา (หล่มสัก)</h3>
-                    <p><i class="fas fa-map-marker-alt"></i><span>52/2 หมู่ 1 ถนนสระบุรี-หล่มสัก ตำบลหนองไขว่ อำเภอหล่มสัก จังหวัดเพชรบูรณ์ 67110</span></p>
-                    <p><i class="fas fa-phone"></i><span>โทรศัพท์: 056-704304</span></p>
-                    <p><i class="fas fa-fax"></i><span>โทรสาร: 056-704305</span></p>
-                    <p><i class="fab fa-facebook-square"></i><a href="https://www.facebook.com/p/โรงเรียนเมตตาวิทยา-100057254208065/?locale=th_TH" target="_blank" style="color:var(--text-color); text-decoration:none;">ติดตามเราบน Facebook</a></p>
+            <div class="timeline-item left">
+                <div class="timeline-content">
+                    <h3>ปีการศึกษา 2547</h3>
+                    <p>ได้ซื้อที่ดินเพิ่มอีกจำนวน 8 ไร่ และสร้างอาคารเรียนอีก 1 หลัง อาคารอำนวยการ 1 หลัง นักเรียนได้รับรางวัลชนะเลิศการประกวดบรรยายธรรมระดับประเทศ นักเรียนได้รับรางวัลเด็กและเยาวชนนำชื่อเสียงมาสู่ประเทศชาติ จำนวน 1 คน</p>
                 </div>
-                <div class="map-container" data-aos="fade-left">
-                   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1350.606986298609!2d101.22823317197673!3d16.772026417147554!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31204e3eff77c979%3A0x9b9c1dbc696fd8b6!2z4LmC4Lij4LiH4LmA4Lij4Li14Lii4LiZ4LmA4Lih4LiV4LiV4Liy4Lin4Li04LiX4Lii4Liy!5e0!3m2!1sth!2sth!4v1749701590628!5m2!1sth!2sth" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+            <div class="timeline-item right">
+                <div class="timeline-content">
+                    <h3>ปีการศึกษา 2548</h3>
+                    <p>ได้สร้างอาคารเรียนเพิ่มอีก 2 หลัง และสร้างอาคารเอนกประสงค์เพื่อใช้จัดกิจกรรมต่าง ๆ</p>
+                </div>
+            </div>
+            <div class="timeline-item left">
+                <div class="timeline-content">
+                    <h3>ปีการศึกษา 2549</h3>
+                    <p>ได้สร้างอาคารสระว่ายน้ำเพื่อให้นักเรียนได้มีทักษะในการว่ายน้ำ นักเรียนได้รับรางวัลชนะเลิศการประกวดพูดสุนทรพจน์ระดับประเทศ เรื่องคุณค่าจากสารานุกรมไทย และได้ผ่านการประกันคุณภาพการศึกษาจาก สมศ.</p>
+                </div>
+            </div>
+            <div class="timeline-item right">
+                <div class="timeline-content">
+                    <h3>ปีการศึกษา 2550</h3>
+                    <p>ได้สร้างอาคารเรียน 3 ชั้น 1 หลัง เพื่อเป็นอาคารเรียนระดับชั้นมัธยมศึกษาอย่างเป็นสัดส่วน นักเรียนได้รับรางวัลเด็กและเยาวชนเข้าคารวะนายกรัฐมนตรี จำนวน 1 คน</p>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="#" class="btn">ดูประวัติทั้งหมด</a>
+        </div>
+    </section>
+
+    <!-- Facilities Section -->
+    <section class="section facilities" id="facilities">
+        <div class="section-title">
+            <h2>อาคารสถานที่</h2>
+        </div>
+        <div class="facilities-grid">
+            <div class="facility-card">
+                <div class="facility-img">
+                    <img src="https://via.placeholder.com/400x300/6a0dad/ffffff?text=อาคาร 1" alt="อาคาร 1">
+                </div>
+                <div class="facility-info">
+                    <h3>อาคาร 1</h3>
+                    <p>อาคารคอนกรีต 1 ชั้น ใช้เป็นห้องธุรการการเงิน ห้องผู้บริหาร ห้องแนะแนว ห้องประชุมราชาวดี</p>
+                </div>
+            </div>
+            <div class="facility-card">
+                <div class="facility-img">
+                    <img src="https://via.placeholder.com/400x300/ffd700/ffffff?text=อาคาร 2-4" alt="อาคาร 2-4">
+                </div>
+                <div class="facility-info">
+                    <h3>อาคาร 2-4</h3>
+                    <p>อาคารคอนกรีต 2 ชั้น ใช้เป็นอาคารเรียนระดับประถมศึกษา</p>
+                </div>
+            </div>
+            <div class="facility-card">
+                <div class="facility-img">
+                    <img src="https://via.placeholder.com/400x300/6a0dad/ffffff?text=อาคาร 5" alt="อาคาร 5">
+                </div>
+                <div class="facility-info">
+                    <h3>อาคาร 5</h3>
+                    <p>อาคารคอนกรีต 2 ชั้น ใช้เป็นอาคารเรียนระดับมัธยมศึกษา ห้องสมุดประถม ห้องนาฏศิลป์ ห้องสภานักเรียน ห้องศิลปศึกษา</p>
+                </div>
+            </div>
+            <div class="facility-card">
+                <div class="facility-img">
+                    <img src="https://via.placeholder.com/400x300/ffd700/ffffff?text=อาคาร 6" alt="อาคาร 6">
+                </div>
+                <div class="facility-info">
+                    <h3>อาคาร 6</h3>
+                    <p>อาคารคอนกรีต 1 ชั้น ใช้เป็นอาคารเรียนฝ่ายปฐมวัย ห้องสื่อการเรียนรู้ปฐมวัย</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer>
-        <div class="container">
-            <p>© <?php echo date("Y"); ?> โรงเรียนเมตตาวิทยา. สงวนลิขสิทธิ์.</p>
-            <p class="credit">ออกแบบและพัฒนาโดย: wuttichai matha</p>
+    <!-- Contact Section -->
+    <footer id="contact">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>เกี่ยวกับเรา</h3>
+                <p>โรงเรียนเมตตาวิทยา จังหวัดเพชรบูรณ์ เป็นโรงเรียนเอกชน ประเภทสามัญศึกษาขนาดใหญ่ สังกัดสำนักงานคณะกรรมการส่งเสริมการศึกษาเอกชน กระทรวงศึกษาธิการ</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>ลิงก์ด่วน</h3>
+                <a href="#home">หน้าแรก</a>
+                <a href="#about">เกี่ยวกับโรงเรียน</a>
+                <a href="#history">ประวัติโรงเรียน</a>
+                <a href="#facilities">อาคารสถานที่</a>
+                <a href="#">หลักสูตรการเรียน</a>
+            </div>
+            <div class="footer-section">
+                <h3>ติดต่อเรา</h3>
+                <div class="contact-info">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <p>ที่อยู่: โรงเรียนเมตตาวิทยา จังหวัดเพชรบูรณ์</p>
+                </div>
+                <div class="contact-info">
+                    <i class="fas fa-phone"></i>
+                    <p>โทรศัพท์: 0-5678-1234</p>
+                </div>
+                <div class="contact-info">
+                    <i class="fas fa-envelope"></i>
+                    <p>อีเมล: info@metta.ac.th</p>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2023 โรงเรียนเมตตาวิทยา. สงวนลิขสิทธิ์ทุกประการ.</p>
         </div>
     </footer>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-
     <script>
-        // Initialize AOS
-        AOS.init({
-            duration: 800,
-            once: true,
-            offset: 50,
+        // Mobile Navigation
+        const hamburger = document.querySelector('.hamburger');
+        const navLinks = document.querySelector('.nav-links');
+        
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            hamburger.innerHTML = navLinks.classList.contains('active') ? 
+                '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
         });
         
-        // Mobile Menu Toggle
-        const menuToggle = document.getElementById('menu-toggle');
-        const navLinks = document.getElementById('nav-links');
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            const icon = menuToggle.querySelector('i');
-            icon.classList.toggle('fa-bars');
-            icon.classList.toggle('fa-times');
+        // Smooth Scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                if (navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                    hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
         });
-
-        // Add shadow to navbar on scroll
-        const navbar = document.getElementById('navbar');
+        
+        // Header Scroll Effect
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 20) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
+            const header = document.querySelector('header');
+            header.style.background = window.scrollY > 50 ? 'rgba(249, 240, 255, 0.95)' : 'var(--nav-bg)';
+            header.style.boxShadow = window.scrollY > 50 ? '0 2px 10px rgba(0, 0, 0, 0.1)' : 'none';
         });
+        
+        // Animation on Scroll
+        const animateOnScroll = () => {
+            const elements = document.querySelectorAll('.timeline-item, .facility-card, .about-content > div');
+            
+            elements.forEach(element => {
+                const elementPosition = element.getBoundingClientRect().top;
+                const screenPosition = window.innerHeight / 1.3;
+                
+                if (elementPosition < screenPosition) {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }
+            });
+        };
+        
+        // Set initial state for animation
+        document.querySelectorAll('.timeline-item, .facility-card, .about-content > div').forEach(element => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(30px)';
+            element.style.transition = 'all 0.6s ease';
+        });
+        
+        window.addEventListener('scroll', animateOnScroll);
+        window.addEventListener('load', animateOnScroll);
     </script>
-
 </body>
 </html>
