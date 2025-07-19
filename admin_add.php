@@ -15,7 +15,7 @@ $message = ""; // สำหรับแสดงข้อความแจ้�
 
 // ประมวลผลเมื่อมีการส่งฟอร์ม (เมื่อกดปุ่มบันทึก)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_admin'])) {
-    
+
     // 1. ตรวจสอบข้อมูลรับเข้า
     // ตรวจสอบ Username
     if (empty(trim($_POST["username"]))) {
@@ -64,10 +64,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_admin'])) {
 
         // เตรียมคำสั่ง SQL สำหรับ INSERT
         $sql = "INSERT INTO admins (username, password, fullname, email) VALUES (?, ?, ?, ?)";
-        
+
         if ($stmt = $mysqli->prepare($sql)) {
             $stmt->bind_param("ssss", $username, $hashed_password, $fullname, $email);
-            
+
             // รันคำสั่ง SQL
             if ($stmt->execute()) {
                 $message = '<div class="alert alert-success" role="alert">เพิ่มข้อมูล Admin ใหม่สำเร็จ!</div>';
@@ -79,26 +79,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_admin'])) {
             $stmt->close();
         }
     }
-    if(isset($mysqli)) $mysqli->close(); // ปิดการเชื่อมต่อฐานข้อมูล
+    if (isset($mysqli)) $mysqli->close(); // ปิดการเชื่อมต่อฐานข้อมูล
 }
 ?>
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เพิ่ม Admin - Metta Academic</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+
     <style>
         body {
             background-color: #f0f2f5;
         }
+
         .sidebar {
             background-color: #2c3e50;
             color: #ecf0f1;
         }
+
         .sidebar .list-group-item {
             background-color: transparent;
             color: #ecf0f1;
@@ -107,25 +110,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_admin'])) {
             padding: 1rem 1.25rem;
             transition: all 0.3s ease;
         }
-        .sidebar .list-group-item:hover, .sidebar .list-group-item.active {
+
+        .sidebar .list-group-item:hover,
+        .sidebar .list-group-item.active {
             background-color: #34495e;
             color: #ffffff;
             border-left-color: #3498db;
         }
+
         /* Responsive Layout */
         .main-wrapper {
             display: flex;
             min-height: 100vh;
         }
+
         .sidebar-wrapper {
             width: 280px;
             transition: margin-left 0.3s ease;
         }
+
         .content-wrapper {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
         }
+
         /* สำหรับจอเล็ก (Mobile) */
         @media (max-width: 991.98px) {
             .sidebar-wrapper {
@@ -133,15 +142,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_admin'])) {
                 top: 0;
                 bottom: 0;
                 left: 0;
-                z-index: 1050; /* สูงกว่า navbar */
-                margin-left: -280px; /* ซ่อนไว้ด้านซ้าย */
+                z-index: 1050;
+                /* สูงกว่า navbar */
+                margin-left: -280px;
+                /* ซ่อนไว้ด้านซ้าย */
             }
+
             .content-wrapper.sidebar-toggled .sidebar-wrapper {
-                margin-left: 0; /* แสดง sidebar */
+                margin-left: 0;
+                /* แสดง sidebar */
             }
         }
     </style>
 </head>
+
 <body>
     <div class="main-wrapper">
         <div class="sidebar-wrapper sidebar p-3">
@@ -227,4 +241,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_admin'])) {
         });
     </script>
 </body>
+
 </html>

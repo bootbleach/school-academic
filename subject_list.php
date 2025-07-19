@@ -102,7 +102,8 @@ require_once 'includes/admin_sidebar.php';
                             <thead class="table-light">
                                 <tr>
                                     <?php
-                                    function sort_link($column, $display_name, $current_sort, $current_order) {
+                                    function sort_link($column, $display_name, $current_sort, $current_order)
+                                    {
                                         $order = ($column == $current_sort && $current_order == 'ASC') ? 'desc' : 'asc';
                                         $icon = ($column == $current_sort) ? ($current_order == 'ASC' ? ' <i class="fas fa-sort-up"></i>' : ' <i class="fas fa-sort-down"></i>') : '';
                                         $search_param = !empty($_GET['search']) ? '&search=' . urlencode($_GET['search']) : '';
@@ -118,7 +119,9 @@ require_once 'includes/admin_sidebar.php';
                             </thead>
                             <tbody>
                                 <?php if (empty($subjects)): ?>
-                                    <tr><td colspan="5" class="text-center py-3">ไม่พบข้อมูลวิชา<?php if(!empty($search_term)) echo " ที่ตรงกับคำค้นหา"; ?></td></tr>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">ไม่พบข้อมูลวิชา<?php if (!empty($search_term)) echo " ที่ตรงกับคำค้นหา"; ?></td>
+                                    </tr>
                                 <?php else: ?>
                                     <?php foreach ($subjects as $index => $subject): ?>
                                         <tr>
