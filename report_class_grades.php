@@ -1,14 +1,19 @@
 <?php
 session_start();
 require_once 'config.php';
-require_once 'includes/admin_functions.php';
+require_once 'includes/admin_functions.php'; // หรือไฟล์ที่เก็บฟังก์ชันไว้
 
-if (!is_admin_loggedin()) {
+// ✅ ตรวจสอบสิทธิ์เฉพาะ admin และ teacher
+if (!is_admin_loggedin() && !is_teacher_loggedin()) {
     header("Location: login.php");
     exit();
 }
 
+// ✅ โค้ดส่วนอื่น เช่น ใช้ session
+$is_admin = is_admin_loggedin();
+$teacher_id = $_SESSION['teacher_id'] ?? null;
 $message = get_session_message();
+
 
 // --- จัดการการค้นหาและกรอง ---
 $search_term = $_GET['search'] ?? '';

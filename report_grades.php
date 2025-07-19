@@ -1,14 +1,18 @@
 <?php
 session_start();
 require_once 'config.php';
-require_once 'includes/admin_functions.php';
+require_once 'includes/admin_functions.php'; // หรือไฟล์ที่เก็บฟังก์ชัน is_admin_loggedin() และ is_teacher_loggedin()
 
-if (!is_admin_loggedin()) {
+// ✅ ตรวจสอบสิทธิ์เฉพาะ admin และ teacher
+if (!is_admin_loggedin() && !is_teacher_loggedin()) {
     header("Location: login.php");
     exit();
 }
 
-$message = get_session_message();
+// ✅ โค้ดส่วนอื่น เช่น ใช้ session
+$is_admin = is_admin_loggedin();
+$teacher_id = $_SESSION['teacher_id'] ?? null;
+$message = get_session_message(); // ตรวจสอบว่าฟังก์ชันนี้มีอยู่จริง หรือลบออกหากไม่ใช้
 
 // --- จัดการการค้นหาและกรอง ---
 $search_term = $_GET['search'] ?? '';
@@ -45,6 +49,14 @@ if (!empty($filter_ay_id)) {
     $types .= 'i';
 }
 
+// ✅ เพิ่มเงื่อนไขสำหรับครู: แสดงเฉพาะห้องเรียนที่ครูคนนี้เป็นครูประจำชั้น
+// ถ้าไม่ใช่แอดมิน (คือเป็นครู) และมีการล็อกอินในฐานะครู
+if (!$is_admin && is_teacher_loggedin()) {
+    $where_conditions[] = "c.teacher_id = ?";
+    $params[] = $teacher_id;
+    $types .= 'i';
+}
+
 if (!empty($where_conditions)) {
     $sql_fetch .= " WHERE " . implode(' AND ', $where_conditions);
 }
@@ -55,6 +67,7 @@ $sql_fetch .= " ORDER BY $order_by_column $sort_order";
 
 $stmt_fetch = $mysqli->prepare($sql_fetch);
 if (!empty($params)) {
+    // ใช้ call_user_func_array เพื่อ bind_param ด้วยอาร์เรย์ของพารามิเตอร์
     $stmt_fetch->bind_param($types, ...$params);
 }
 $stmt_fetch->execute();
@@ -64,9 +77,32 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt_fetch->close();
 
+
 $page_title = "เลือกห้องเรียนเพื่อดูคะแนนรวม";
-require_once 'includes/admin_header.php';
-require_once 'includes/admin_sidebar.php';
+// ✅ ใช้ header และ footer ตามบทบาท
+if ($is_admin) {
+    require_once 'includes/admin_header.php';
+} else {
+    require_once 'includes/teacher_header.php';
+}
+
+
+// ✅ Sidebar ตามบทบาทผู้ใช้
+switch ($_SESSION['role'] ?? '') {
+    case 'admin':
+        require_once 'includes/admin_sidebar.php';
+        break;
+    case 'teacher':
+        require_once 'includes/teacher_sidebar.php';
+        break;
+    case 'student':
+        require_once 'includes/student_sidebar.php';
+        break;
+    default:
+        echo "Access denied";
+        exit;
+}
+
 ?>
 
 <div class="content-wrapper">
@@ -94,7 +130,6 @@ require_once 'includes/admin_sidebar.php';
                                         $order = ($column == $current_sort && $current_order == 'ASC') ? 'desc' : 'asc';
                                         $icon = ($column == $current_sort) ? ($current_order == 'ASC' ? ' <i class="fas fa-sort-up"></i>' : ' <i class="fas fa-sort-down"></i>') : '';
                                         
-                                        // **แก้ไข:** เปลี่ยน $params เป็น $query_params
                                         $query_params = [
                                             'sort' => $column,
                                             'order' => $order,
@@ -137,4 +172,11 @@ require_once 'includes/admin_sidebar.php';
     </main>
 </div>
 
-<?php require_once 'includes/admin_footer.php'; ?>
+<?php
+// ✅ ใช้ footer ตามบทบาท
+if ($is_admin) {
+    require_once 'includes/admin_footer.php';
+} else {
+    require_once 'includes/teacher_footer.php';
+}
+?>
