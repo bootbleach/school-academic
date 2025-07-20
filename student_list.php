@@ -11,11 +11,10 @@ if (!is_admin_loggedin()) {
 
 $message = get_session_message();
 
-// --- ส่วนที่ 1: จัดการการค้นหา, กรอง และเรียงลำดับ ---
+// --- ส่วนที่ 1: จัดการการค้นหาและเรียงลำดับ ---
 $search_term = $_GET['search'] ?? '';
-$filter_class_id = $_GET['class_id'] ?? ''; // รับค่า class_id ที่ใช้กรอง
 
-$sort_column_whitelist = ['student_code', 'username', 'first_name', 'class_name'];
+$sort_column_whitelist = ['student_code', 'username', 'first_name']; // ลบ class_name ออก
 $sort_column = $_GET['sort'] ?? 'student_code';
 $sort_order = isset($_GET['order']) && strtolower($_GET['order']) === 'desc' ? 'DESC' : 'ASC';
 
@@ -23,21 +22,46 @@ if (!in_array($sort_column, $sort_column_whitelist)) {
     $sort_column = 'student_code';
 }
 
-// --- **เพิ่มเข้ามา:** ดึงข้อมูลคลาสทั้งหมดสำหรับ Filter Dropdown ---
-$classes_for_filter = $mysqli->query("SELECT class_id, class_name, class_code FROM classes ORDER BY class_code ASC");
-
 // --- ส่วนที่ 2: การจัดการลบข้อมูล ---
-// ... (ส่วนนี้เหมือนเดิม) ...
+if (isset($_GET['delete_id'])) {
+    $delete_id = $_GET['delete_id'];
 
-// --- ส่วนที่ 3: แก้ไขการดึงข้อมูลให้รองรับทุกเงื่อนไข ---
+    // เริ่ม Transaction เพื่อให้การลบข้อมูลทั้งหมดเป็นไปอย่างสมบูรณ์ หรือยกเลิกทั้งหมด
+    $mysqli->begin_transaction();
+    try {
+        // ลบข้อมูลนักเรียนจากตาราง students
+        $stmt_delete_student = $mysqli->prepare("DELETE FROM students WHERE student_id = ?");
+        $stmt_delete_student->bind_param("i", $delete_id);
+        $stmt_delete_student->execute();
+
+        if ($stmt_delete_student->affected_rows > 0) {
+            // เนื่องจาก student_classes และ enrollments มี ON DELETE CASCADE
+            // การลบนักเรียนในตาราง students จะทำให้ข้อมูลที่เกี่ยวข้องถูกลบโดยอัตโนมัติ
+            $mysqli->commit();
+            set_session_message("success", "ลบข้อมูลนักเรียนรหัส #" . htmlspecialchars($delete_id) . " เรียบร้อยแล้ว.");
+        } else {
+            throw new Exception("ไม่พบข้อมูลนักเรียนรหัส #" . htmlspecialchars($delete_id) . " ที่จะลบ หรือเกิดข้อผิดพลาด");
+        }
+    } catch (Exception $e) {
+        $mysqli->rollback();
+        set_session_message("danger", "เกิดข้อผิดพลาดในการลบข้อมูลนักเรียน: " . $e->getMessage());
+    }
+    header("Location: student_list.php");
+    exit();
+}
+
+
+// --- ส่วนที่ 3: ดึงข้อมูลนักเรียนเท่านั้น ---
 $students = [];
 $params = [];
 $types = '';
 $where_conditions = [];
 
-$sql_fetch = "SELECT s.student_id, s.student_code, s.username, s.prefix, s.first_name, s.last_name, c.class_name
-              FROM students s
-              LEFT JOIN classes c ON s.class_id = c.class_id";
+// กำหนด JOIN พื้นฐาน
+// ดึงข้อมูลจากตาราง students โดยตรง ไม่ต้อง Join กับ student_classes และ classes แล้ว
+$sql_fetch = "SELECT s.student_id, s.student_code, s.username, s.prefix, s.first_name, s.last_name
+              FROM students s";
+
 
 // สร้างเงื่อนไข WHERE แบบไดนามิก
 if (!empty($search_term)) {
@@ -46,23 +70,16 @@ if (!empty($search_term)) {
     array_push($params, $like_term, $like_term, $like_term);
     $types .= 'sss';
 }
-// **เพิ่มเข้ามา:** สร้างเงื่อนไขกรองตามห้องเรียน
-if (!empty($filter_class_id)) {
-    $where_conditions[] = "s.class_id = ?";
-    $params[] = $filter_class_id;
-    $types .= 'i';
-}
 
 if (!empty($where_conditions)) {
     $sql_fetch .= " WHERE " . implode(' AND ', $where_conditions);
 }
 
-// จัดการการเรียงลำดับ (ORDER BY) - (ส่วนนี้เหมือนเดิม)
+// จัดการการเรียงลำดับ (ORDER BY)
 $order_by_map = [
     'student_code' => 's.student_code',
     'username' => 's.username',
-    'first_name' => 's.first_name',
-    'class_name' => 'c.class_name'
+    'first_name' => 's.first_name'
 ];
 $order_by_column = $order_by_map[$sort_column];
 if ($sort_column === 'student_code') {
@@ -73,6 +90,7 @@ if ($sort_column === 'student_code') {
 
 $stmt_fetch = $mysqli->prepare($sql_fetch);
 if (!empty($params)) {
+    // ใช้ ...$params เพื่อส่งอาร์เรย์เป็น Argument list ให้ bind_param
     $stmt_fetch->bind_param($types, ...$params);
 }
 $stmt_fetch->execute();
@@ -99,29 +117,15 @@ require_once 'includes/admin_sidebar.php';
     </div>
 </div>
             
-
             <?php if (!empty($message)) echo $message; ?>
 
             <div class="card">
                 <div class="card-header">
                     <form method="get" class="row g-3 align-items-center">
-                        <div class="col-md-5">
-                             <label for="search" class="visually-hidden">ค้นหา</label>
+                        <div class="col-md-10"> <label for="search" class="visually-hidden">ค้นหา</label>
                             <input type="text" name="search" id="search" class="form-control" placeholder="ค้นหา รหัสนักเรียน, Username, ชื่อ..." value="<?php echo htmlspecialchars($search_term); ?>">
                         </div>
-                        <div class="col-md-5">
-                            <label for="class_id" class="visually-hidden">ห้องเรียน</label>
-                            <select name="class_id" id="class_id" class="form-select">
-                                <option value="">-- กรองตามห้องเรียนทั้งหมด --</option>
-                                <?php foreach($classes_for_filter as $class): ?>
-                                    <option value="<?php echo $class['class_id']; ?>" <?php if($filter_class_id == $class['class_id']) echo 'selected'; ?>>
-                                        <?php echo htmlspecialchars($class['class_code'] . ' - ' . $class['class_name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-grid">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i> กรองข้อมูล</button>
+                        <div class="col-md-2 d-grid"> <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i> ค้นหา</button>
                         </div>
                     </form>
                 </div>
@@ -131,7 +135,7 @@ require_once 'includes/admin_sidebar.php';
                             <thead class="table-light">
                                 <tr>
                                     <?php
-                                    // **แก้ไข:** ฟังก์ชัน sort_link ให้เก็บค่า class_id ไปด้วย
+                                    // ฟังก์ชัน sort_link ให้เก็บค่า search ไปด้วย
                                     function sort_link($column, $display_name, $current_sort, $current_order) {
                                         $order = ($column == $current_sort && $current_order == 'ASC') ? 'desc' : 'asc';
                                         $icon = ($column == $current_sort) ? ($current_order == 'ASC' ? ' <i class="fas fa-sort-up"></i>' : ' <i class="fas fa-sort-down"></i>') : '';
@@ -139,8 +143,7 @@ require_once 'includes/admin_sidebar.php';
                                         $query_params = [
                                             'sort' => $column,
                                             'order' => $order,
-                                            'search' => $_GET['search'] ?? '',
-                                            'class_id' => $_GET['class_id'] ?? '' // เพิ่ม class_id เข้ามา
+                                            'search' => $_GET['search'] ?? ''
                                         ];
                                         $link = http_build_query(array_filter($query_params));
                                         
@@ -151,13 +154,12 @@ require_once 'includes/admin_sidebar.php';
                                     <th><?php echo sort_link('student_code', 'รหัสนักเรียน', $sort_column, $sort_order); ?></th>
                                     <th><?php echo sort_link('username', 'Username', $sort_column, $sort_order); ?></th>
                                     <th><?php echo sort_link('first_name', 'ชื่อ-นามสกุล', $sort_column, $sort_order); ?></th>
-                                    <th><?php echo sort_link('class_name', 'ห้องเรียน', $sort_column, $sort_order); ?></th>
                                     <th class="text-end">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($students)): ?>
-                                    <tr><td colspan="6" class="text-center py-3">ไม่พบข้อมูลนักเรียน<?php if(!empty($search_term) || !empty($filter_class_id)) echo " ตามเงื่อนไขที่กำหนด"; ?></td></tr>
+                                    <tr><td colspan="5" class="text-center py-3">ไม่พบข้อมูลนักเรียน<?php if(!empty($search_term)) echo " ตามเงื่อนไขที่กำหนด"; ?></td></tr>
                                 <?php else: ?>
                                     <?php foreach ($students as $index => $student): ?>
                                     <tr>
@@ -165,7 +167,6 @@ require_once 'includes/admin_sidebar.php';
                                         <td><?php echo htmlspecialchars($student['student_code']); ?></td>
                                         <td><?php echo htmlspecialchars($student['username']); ?></td>
                                         <td><?php echo htmlspecialchars($student['prefix'] . $student['first_name'] . ' ' . $student['last_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($student['class_name'] ?? 'ยังไม่ได้กำหนด'); ?></td>
                                         <td class="text-end">
                                             <a href="student_edit.php?id=<?php echo $student['student_id']; ?>" class="btn btn-warning btn-sm" title="แก้ไข"><i class="fas fa-edit"></i></a>
                                             <a href="student_list.php?delete_id=<?php echo $student['student_id']; ?>" class="btn btn-danger btn-sm" title="ลบ" onclick="return confirm('ยืนยันการลบ?')"><i class="fas fa-trash-alt"></i></a>

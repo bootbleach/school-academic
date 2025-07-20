@@ -1,5 +1,6 @@
 <?php
 session_start();
+// ต้องแน่ใจว่า config.php มีการเชื่อมต่อ $mysqli
 require_once 'config.php';
 require_once 'includes/admin_functions.php';
 
@@ -10,46 +11,63 @@ if (!is_admin_loggedin()) {
 
 $message = get_session_message();
 
-// --- การจัดการลบข้อมูล ---
+// --- การจัดการลบข้อมูลคลาสพื้นฐาน ---
 if (isset($_GET['delete_id'])) {
-    $id = $_GET['delete_id'];
-    // การใช้ Transaction เพื่อความปลอดภัย
+    $id = intval($_GET['delete_id']); // ตรวจสอบว่าเป็น int เพื่อความปลอดภัย
     $mysqli->begin_transaction();
     try {
-        // ลบตารางสอนที่เกี่ยวข้องก่อน
-        $stmt_schedule = $mysqli->prepare("DELETE FROM class_schedules WHERE class_id = ?");
-        $stmt_schedule->bind_param("i", $id);
-        $stmt_schedule->execute();
-        $stmt_schedule->close();
-
-        // ลบคลาสหลัก
+        // ลบคลาสหลักจากตาราง `classes`
+        // การลบนี้จะทริกเกอร์การลบข้อมูลที่เกี่ยวข้องใน `academic_class_instances`
+        // และต่อเนื่องไปถึง `class_schedules`, `enrollments`, `student_classes`
+        // โดยอัตโนมัติผ่าน Foreign Key ที่ตั้งค่า ON DELETE CASCADE ไว้
         $stmt_class = $mysqli->prepare("DELETE FROM classes WHERE class_id = ?");
+        if (!$stmt_class) {
+            throw new Exception("Error preparing statement: " . $mysqli->error);
+        }
         $stmt_class->bind_param("i", $id);
-        $stmt_class->execute();
+        if (!$stmt_class->execute()) {
+            throw new Exception("Error executing delete statement: " . $stmt_class->error);
+        }
         $stmt_class->close();
 
         $mysqli->commit();
-        set_session_message('ลบคลาสเรียนและตารางสอนที่เกี่ยวข้องสำเร็จ!', 'success');
+        set_session_message('ลบคลาสเรียนพื้นฐานและข้อมูลที่เกี่ยวข้องทั้งหมดสำเร็จ!', 'success');
     } catch (Exception $e) {
         $mysqli->rollback();
         set_session_message('เกิดข้อผิดพลาดในการลบ: ' . $e->getMessage(), 'danger');
+        error_log("Delete class error: " . $e->getMessage()); // บันทึกข้อผิดพลาดสำหรับการดีบัก
     }
     header("Location: class_list.php");
     exit();
 }
 
-// --- ดึงข้อมูลคลาสทั้งหมด (แก้ไข SQL ไม่ให้มี subject_name) ---
-$sql_fetch = "SELECT 
-                c.class_id, c.class_code, c.class_name, c.room_number,
-                t.fullname AS teacher_name,
-                ay.year AS academic_year_name
-            FROM classes c
-            LEFT JOIN teachers t ON c.teacher_id = t.teacher_id
-            LEFT JOIN academic_years ay ON c.academic_year_id = ay.acad_year_id
-            ORDER BY ay.year DESC, c.class_code ASC";
+// --- ดึงข้อมูลคลาสพื้นฐานทั้งหมด ---
+// ดึงข้อมูลจากตาราง `classes` เท่านั้น ไม่ต้อง JOIN กับ `teachers` หรือดึง `room_number`
+$sql_fetch = "SELECT
+                    c.class_id, c.class_code, c.class_name
+                FROM classes c
+                ORDER BY c.class_code ASC"; // เรียงตามรหัสคลาส
 $classes = $mysqli->query($sql_fetch);
 
-$page_title = "จัดการคลาสเรียน (ห้องเรียน)";
+// --- ดึง ID ของปีการศึกษาปัจจุบัน (ยังคงเก็บไว้หากต้องการใช้ในอนาคต เช่น ลิงก์ไปยัง manage_class_subjects) ---
+$current_acad_year_id = null;
+$stmt_current_year = $mysqli->prepare("SELECT acad_year_id FROM academic_years WHERE is_current_year = 1 LIMIT 1");
+if ($stmt_current_year) {
+    $stmt_current_year->execute();
+    $result_current_year = $stmt_current_year->get_result();
+    if ($result_current_year->num_rows > 0) {
+        $current_acad_year_id = $result_current_year->fetch_assoc()['acad_year_id'];
+    } else {
+        // หากไม่พบปีการศึกษาปัจจุบัน อาจแสดงข้อความเตือน หรือจัดการตามความเหมาะสม
+        // set_session_message('ไม่พบปีการศึกษาปัจจุบัน เพื่อจัดการวิชาและตารางสอน.', 'warning');
+    }
+    $stmt_current_year->close();
+} else {
+    error_log("Error preparing current academic year statement: " . $mysqli->error);
+}
+
+
+$page_title = "จัดการคลาสเรียนพื้นฐาน"; // เปลี่ยนชื่อหน้าให้ชัดเจนขึ้น
 require_once 'includes/admin_header.php';
 require_once 'includes/admin_sidebar.php';
 ?>
@@ -59,7 +77,7 @@ require_once 'includes/admin_sidebar.php';
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="d-none d-lg-block"><i class="fas fa-school me-2"></i><?php echo htmlspecialchars($page_title); ?></h1>
-                <a href="class_add.php" class="btn btn-primary ms-auto"><i class="fas fa-plus-circle me-2"></i>สร้างห้องเรียนใหม่</a>
+                <a href="class_add.php" class="btn btn-primary ms-auto"><i class="fas fa-plus-circle me-2"></i>สร้างห้องเรียนพื้นฐานใหม่</a>
             </div>
 
             <?php if (!empty($message)) echo $message; ?>
@@ -70,38 +88,31 @@ require_once 'includes/admin_sidebar.php';
                         <table class="table table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>รหัสคลาส</th>
-                                    <th>ชื่อคลาส/ห้องเรียน</th>
-                                    <th>ครูประจำชั้น</th>
-                                    <th>ปีการศึกษา/เทอม</th>
-                                    <th>ห้องเรียน</th>
-                                    <th class="text-end" style="width: 220px;">จัดการ</th>
-                                </tr>
+                                    <th>รหัสคลาส (Class ID)</th> <th>รหัสห้อง (Class Code)</th>
+                                    <th>ชื่อคลาส/ห้องเรียน (Class Name)</th>
+                                    <th class="text-end" style="width: 200px;">จัดการ</th> </tr>
                             </thead>
                             <tbody>
                                 <?php if ($classes && $classes->num_rows > 0): ?>
                                     <?php foreach ($classes as $class): ?>
                                         <tr>
+                                            <td><?php echo htmlspecialchars($class['class_id']); ?></td>
                                             <td><?php echo htmlspecialchars($class['class_code']); ?></td>
                                             <td><?php echo htmlspecialchars($class['class_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($class['teacher_name'] ?? 'N/A'); ?></td>
-                                            <td><?php echo htmlspecialchars($class['academic_year_name'] ?? 'N/A'); ?></td>
-                                            <td><?php echo htmlspecialchars($class['room_number'] ?? '-'); ?></td>
                                             <td class="text-end">
-                                                <a href="class_schedule.php?class_id=<?php echo $class['class_id']; ?>" class="btn btn-info btn-sm" title="จัดการตารางสอน">
-                                                    <i class="fas fa-table"></i> ตารางสอน
-                                                </a>
-                                                <a href="class_edit.php?id=<?php echo $class['class_id']; ?>" class="btn btn-warning btn-sm" title="แก้ไข">
+                                                <a href="class_edit.php?id=<?php echo $class['class_id']; ?>" class="btn btn-warning btn-sm me-1" title="แก้ไข">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <a href="class_list.php?delete_id=<?php echo $class['class_id']; ?>" class="btn btn-danger btn-sm" title="ลบ" onclick="return confirm('ยืนยันการลบ? ข้อมูลตารางสอนของคลาสนี้จะถูกลบไปด้วย')">
+                                                <a href="class_list.php?delete_id=<?php echo $class['class_id']; ?>" class="btn btn-danger btn-sm" title="ลบ" onclick="return confirm('ยืนยันการลบ? การลบห้องเรียนพื้นฐานนี้จะส่งผลให้ข้อมูลห้องเรียนรายปีทั้งหมด (Academic Class Instances) และข้อมูลที่เกี่ยวข้อง (เช่น ตารางสอน, การลงทะเบียน) ที่อ้างอิงถึงห้องเรียนนี้ถูกลบออกทั้งหมด คุณแน่ใจหรือไม่?');">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <tr><td colspan="6" class="text-center py-3">ยังไม่มีข้อมูลคลาสเรียน</td></tr>
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3">ยังไม่มีข้อมูลคลาสเรียนพื้นฐาน</td>
+                                    </tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>

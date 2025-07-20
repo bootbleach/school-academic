@@ -1,22 +1,26 @@
 <?php
 session_start();
 require_once 'config.php';
-require_once 'includes/admin_functions.php';
+require_once 'includes/admin_functions.php'; // ตรวจสอบว่ามีฟังก์ชันนี้อยู่จริง
 
 // 1. ตรวจสอบสิทธิ์การเข้าถึง (Admin หรือ Teacher)
 if (!is_admin_loggedin() && !is_teacher_loggedin()) {
     header("Location: login.php");
     exit();
 }
+
 // 2. ตรวจสอบว่ามี class_id ส่งมาหรือไม่
 if (!isset($_GET['class_id']) || !filter_var($_GET['class_id'], FILTER_VALIDATE_INT)) {
     $redirect_page = is_admin_loggedin() ? 'report_class_grades.php' : 'teacher_homeroom_report.php';
-    header("Location: $redirect_page");
+    set_session_message('ไม่พบข้อมูลห้องเรียน', 'danger');
+    header("Location: " . $redirect_page);
     exit();
 }
+
 $class_id = (int)$_GET['class_id'];
 $is_admin = is_admin_loggedin();
 $teacher_id = $_SESSION['teacher_id'] ?? null;
+
 // 3. ตรวจสอบสิทธิ์การเข้าถึงหน้ารายงาน
 $has_permission = false;
 if ($is_admin) {
@@ -24,33 +28,89 @@ if ($is_admin) {
 } else {
     // ครูจะเข้าได้ก็ต่อเมื่อเป็นครูประจำชั้นของห้องนี้
     $stmt_perm = $mysqli->prepare("SELECT class_id FROM classes WHERE class_id = ? AND teacher_id = ?");
-    $stmt_perm->bind_param("ii", $class_id, $teacher_id);
-    $stmt_perm->execute();
-    if ($stmt_perm->get_result()->num_rows > 0) {
-        $has_permission = true;
+    if ($stmt_perm) {
+        $stmt_perm->bind_param("ii", $class_id, $teacher_id);
+        $stmt_perm->execute();
+        if ($stmt_perm->get_result()->num_rows > 0) {
+            $has_permission = true;
+        }
+        $stmt_perm->close();
     }
-    $stmt_perm->close();
 }
+
 if (!$has_permission) {
     set_session_message('คุณไม่มีสิทธิ์ดูรายงานของห้องเรียนนี้', 'danger');
     $redirect_page = $is_admin ? 'report_class_grades.php' : 'teacher_homeroom_report.php';
-    header("Location: $redirect_page");
+    header("Location: " . $redirect_page);
     exit();
 }
-// 4. ดึงข้อมูลสำหรับสร้างรายงาน
-$class_info = $mysqli->query("SELECT c.*, ay.year as academic_year_name FROM classes c JOIN academic_years ay ON c.academic_year_id = ay.acad_year_id WHERE c.class_id = $class_id")->fetch_assoc();
-if (!$class_info) { header("Location: report_class_grades.php"); exit(); }
-$students = $mysqli->query("SELECT * FROM students WHERE class_id = $class_id ORDER BY CAST(student_code AS UNSIGNED) ASC, student_code ASC")->fetch_all(MYSQLI_ASSOC);
-$subjects_in_class = $mysqli->query("SELECT DISTINCT s.subject_id, s.subject_code, s.subject_name, s.credits FROM subjects s JOIN class_schedules cs ON s.subject_id = cs.subject_id WHERE cs.class_id = $class_id ORDER BY s.subject_code ASC")->fetch_all(MYSQLI_ASSOC);
-$grades_map = [];
-$grade_result = $mysqli->query("SELECT student_id, subject_id, score, grade, grade_point FROM enrollments WHERE class_id = $class_id");
-while($row = $grade_result->fetch_assoc()) {
-    $grades_map[$row['student_id']][$row['subject_id']] = $row;
+
+// 4. ดึงข้อมูลสำหรับสร้างรายงาน (ใช้ Prepared Statements)
+$class_info = null;
+$stmt_class_info = $mysqli->prepare("SELECT c.*, ay.year as academic_year_name FROM classes c JOIN academic_years ay ON c.academic_year_id = ay.acad_year_id WHERE c.class_id = ?");
+if ($stmt_class_info) {
+    $stmt_class_info->bind_param("i", $class_id);
+    $stmt_class_info->execute();
+    $class_info = $stmt_class_info->get_result()->fetch_assoc();
+    $stmt_class_info->close();
 }
 
+if (!$class_info) {
+    set_session_message('ไม่พบข้อมูลห้องเรียนที่ระบุ', 'danger');
+    $redirect_page = $is_admin ? 'report_class_grades.php' : 'teacher_homeroom_report.php';
+    header("Location: " . $redirect_page);
+    exit();
+}
+
+// ดึงรายชื่อนักเรียนในคลาสปัจจุบัน
+$students = [];
+$stmt_students = $mysqli->prepare("SELECT s.student_id, s.student_code, s.prefix, s.first_name, s.last_name
+                                   FROM students s
+                                   JOIN student_classes sc ON s.student_id = sc.student_id
+                                   JOIN academic_years ay ON sc.academic_year_id = ay.acad_year_id
+                                   WHERE sc.class_id = ? AND ay.is_current_year = 1
+                                   ORDER BY CAST(s.student_code AS UNSIGNED) ASC, s.student_code ASC");
+if ($stmt_students) {
+    $stmt_students->bind_param("i", $class_id);
+    $stmt_students->execute();
+    $result_students = $stmt_students->get_result();
+    $students = $result_students->fetch_all(MYSQLI_ASSOC);
+    $stmt_students->close();
+}
+
+
+// ดึงวิชาทั้งหมดที่สอนในคลาสนี้
+$subjects_in_class = [];
+$stmt_subjects = $mysqli->prepare("SELECT DISTINCT s.subject_id, s.subject_code, s.subject_name, s.credits
+                                   FROM subjects s
+                                   JOIN class_schedules cs ON s.subject_id = cs.subject_id
+                                   WHERE cs.class_id = ?
+                                   ORDER BY s.subject_code ASC");
+if ($stmt_subjects) {
+    $stmt_subjects->bind_param("i", $class_id);
+    $stmt_subjects->execute();
+    $result_subjects = $stmt_subjects->get_result();
+    $subjects_in_class = $result_subjects->fetch_all(MYSQLI_ASSOC);
+    $stmt_subjects->close();
+}
+
+// ดึงคะแนนและเกรดของนักเรียนทุกคนในคลาสนี้
+$grades_map = [];
+$stmt_grades = $mysqli->prepare("SELECT student_id, subject_id, score, grade, grade_point FROM enrollments WHERE class_id = ?");
+if ($stmt_grades) {
+    $stmt_grades->bind_param("i", $class_id);
+    $stmt_grades->execute();
+    $grade_result = $stmt_grades->get_result();
+    while($row = $grade_result->fetch_assoc()) {
+        $grades_map[$row['student_id']][$row['subject_id']] = $row;
+    }
+    $stmt_grades->close();
+}
+
+
 $page_title = "รายงานคะแนนนักเรียน";
-if ($is_admin) { require_once 'includes/admin_header.php'; }
-else { require_once 'includes/teacher_header.php'; }
+if ($is_admin) { require_once 'includes/admin_header.php'; require_once 'includes/admin_sidebar.php'; }
+else { require_once 'includes/teacher_header.php'; require_once 'includes/teacher_sidebar.php'; }
 ?>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
@@ -336,10 +396,6 @@ else { require_once 'includes/teacher_header.php'; }
         color: #721c24;
     }
 </style>
-<?php
-if ($is_admin) { require_once 'includes/admin_sidebar.php'; }
-else { require_once 'includes/teacher_sidebar.php'; }
-?>
 <div class="content-wrapper">
     <main class="p-4">
         <div class="main-container">
@@ -354,15 +410,15 @@ else { require_once 'includes/teacher_sidebar.php'; }
             
             <div class="printable-area">
                 <div class="text-center mb-4">
-                    <h4>รายงานคะแนนนักเรียน ประจำภาคเรียน <?php echo htmlspecialchars($class_info['academic_year_name']); ?></h4>
-                    <h5>ห้องเรียน <?php echo htmlspecialchars($class_info['class_name']); ?></h5>
+                    <h4>รายงานคะแนนนักเรียน ประจำภาคเรียน <?php echo htmlspecialchars($class_info['academic_year_name'] ?? ''); ?></h4>
+                    <h5>ห้องเรียน <?php echo htmlspecialchars($class_info['class_name'] ?? ''); ?></h5>
                 </div>
                 <div class="card">
                     <div class="card-body p-2">
                         <div class="table-container">
                             <table class="table table-bordered grade-table">
                                 <thead class="table-light text-center">
-                                     <tr>
+                                    <tr>
                                         <th class="align-middle col-number">#</th>
                                         <th class="align-middle col-student-code">รหัสนักเรียน</th>
                                         <th class="align-middle col-student-name">ชื่อ-นามสกุล</th>

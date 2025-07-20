@@ -1,51 +1,147 @@
 <?php
 session_start();
-require_once 'config.php';
-require_once 'includes/admin_functions.php';
+require_once 'config.php'; // ไฟล์เชื่อมต่อฐานข้อมูล
+require_once 'includes/admin_functions.php'; // ไฟล์ฟังก์ชันเกี่ยวกับการตรวจสอบสิทธิ์และอื่นๆ
+
+// ฟังก์ชันสำหรับคำนวณเกรด (ต้องมั่นใจว่ามีใน admin_functions.php หรือกำหนดตรงนี้)
+// หากไม่มีฟังก์ชันนี้ใน admin_functions.php ต้องนำโค้ดมาใส่ตรงนี้
+if (!function_exists('calculate_grade_from_score')) {
+    function calculate_grade_from_score($score, $credits = 0) {
+        $grade = '';
+        $grade_point = null;
+
+        // สำหรับวิชาที่ไม่มีหน่วยกิต (credits = 0 หรือ null)
+        if ((float)$credits == 0 || $credits === null) {
+            if ($score >= 50) {
+                $grade = 'ผ'; // ผ่าน
+            } else {
+                $grade = 'มผ'; // ไม่ผ่าน
+            }
+            $grade_point = null; // ไม่มีเกรดเฉลี่ยสำหรับวิชาที่ไม่มีหน่วยกิต
+        } else {
+            // สำหรับวิชาที่มีหน่วยกิต
+            if ($score >= 80) { $grade = 'A'; $grade_point = 4.00; }
+            else if ($score >= 75) { $grade = 'B+'; $grade_point = 3.50; }
+            else if ($score >= 70) { $grade = 'B'; $grade_point = 3.00; }
+            else if ($score >= 65) { $grade = 'C+'; $grade_point = 2.50; }
+            else if ($score >= 60) { $grade = 'C'; $grade_point = 2.00; }
+            else if ($score >= 55) { $grade = 'D+'; $grade_point = 1.50; }
+            else if ($score >= 50) { $grade = 'D'; $grade_point = 1.00; }
+            else { $grade = 'ร'; $grade_point = 0.00; } // ร. คือ ติด "ร" ไม่ผ่าน
+        }
+        return ['grade' => $grade, 'grade_point' => $grade_point];
+    }
+}
 
 // 1. ตรวจสอบสิทธิ์การเข้าถึง (Admin หรือ Teacher)
 if (!is_admin_loggedin() && !is_teacher_loggedin()) {
     header("Location: login.php");
     exit();
 }
-// 2. ตรวจสอบว่ามี class_id ส่งมาหรือไม่
+
+// 2. ตรวจสอบว่ามี class_id ส่งมาหรือไม่ และเป็นตัวเลขที่ถูกต้อง
 if (!isset($_GET['class_id']) || !filter_var($_GET['class_id'], FILTER_VALIDATE_INT)) {
     $redirect_page = is_admin_loggedin() ? 'report_class_grades.php' : 'teacher_homeroom_report.php';
+    set_session_message('โปรดระบุรหัสห้องเรียนที่ถูกต้อง.', 'danger'); // เพิ่มข้อความแจ้งเตือน
     header("Location: $redirect_page");
     exit();
 }
+
 $class_id = (int)$_GET['class_id'];
 $is_admin = is_admin_loggedin();
 $teacher_id = $_SESSION['teacher_id'] ?? null;
-// 3. ตรวจสอบสิทธิ์การเข้าถึงหน้ารายงาน
+
+// 3. ตรวจสอบสิทธิ์การเข้าถึงหน้ารายงาน (ใช้ Prepared Statement)
 $has_permission = false;
 if ($is_admin) {
     $has_permission = true; // Admin เข้าได้เสมอ
 } else {
     // ครูจะเข้าได้ก็ต่อเมื่อเป็นครูประจำชั้นของห้องนี้
     $stmt_perm = $mysqli->prepare("SELECT class_id FROM classes WHERE class_id = ? AND teacher_id = ?");
-    $stmt_perm->bind_param("ii", $class_id, $teacher_id);
-    $stmt_perm->execute();
-    if ($stmt_perm->get_result()->num_rows > 0) {
-        $has_permission = true;
+    if ($stmt_perm) {
+        $stmt_perm->bind_param("ii", $class_id, $teacher_id);
+        $stmt_perm->execute();
+        if ($stmt_perm->get_result()->num_rows > 0) {
+            $has_permission = true;
+        }
+        $stmt_perm->close();
+    } else {
+        error_log("Failed to prepare statement for teacher permission check: " . $mysqli->error);
     }
-    $stmt_perm->close();
 }
+
 if (!$has_permission) {
     set_session_message('คุณไม่มีสิทธิ์ดูรายงานของห้องเรียนนี้', 'danger');
     $redirect_page = $is_admin ? 'report_class_grades.php' : 'teacher_homeroom_report.php';
     header("Location: $redirect_page");
     exit();
 }
-// 4. ดึงข้อมูลสำหรับสร้างรายงาน
-$class_info = $mysqli->query("SELECT c.*, ay.year as academic_year_name FROM classes c JOIN academic_years ay ON c.academic_year_id = ay.acad_year_id WHERE c.class_id = $class_id")->fetch_assoc();
-if (!$class_info) { header("Location: report_class_grades.php"); exit(); }
-$students = $mysqli->query("SELECT * FROM students WHERE class_id = $class_id ORDER BY CAST(student_code AS UNSIGNED) ASC, student_code ASC")->fetch_all(MYSQLI_ASSOC);
-$subjects_in_class = $mysqli->query("SELECT DISTINCT s.subject_id, s.subject_code, s.subject_name, s.credits FROM subjects s JOIN class_schedules cs ON s.subject_id = cs.subject_id WHERE cs.class_id = $class_id ORDER BY s.subject_code ASC")->fetch_all(MYSQLI_ASSOC);
+
+// 4. ดึงข้อมูลสำหรับสร้างรายงาน (ทั้งหมดใช้ Prepared Statements)
+$class_info = null;
+$stmt_class_info = $mysqli->prepare("SELECT c.*, ay.year as academic_year_name FROM classes c JOIN academic_years ay ON c.academic_year_id = ay.acad_year_id WHERE c.class_id = ?");
+if ($stmt_class_info) {
+    $stmt_class_info->bind_param("i", $class_id);
+    $stmt_class_info->execute();
+    $result_class_info = $stmt_class_info->get_result();
+    if ($row = $result_class_info->fetch_assoc()) {
+        $class_info = $row;
+    }
+    $stmt_class_info->close();
+} else {
+    error_log("Failed to prepare statement for class info: " . $mysqli->error);
+}
+
+if (!$class_info) {
+    set_session_message('ไม่พบข้อมูลห้องเรียนที่ระบุ.', 'danger');
+    $redirect_page = is_admin_loggedin() ? 'report_class_grades.php' : 'teacher_homeroom_report.php';
+    header("Location: $redirect_page");
+    exit();
+}
+
+// **ปรับปรุงตรงนี้: ดึงนักเรียนโดย JOIN กับ student_classes**
+$students = [];
+$stmt_students = $mysqli->prepare("SELECT s.student_id, s.student_code, s.prefix, s.first_name, s.last_name FROM students s JOIN student_classes sc ON s.student_id = sc.student_id WHERE sc.class_id = ? ORDER BY CAST(s.student_code AS UNSIGNED) ASC, s.student_code ASC");
+if ($stmt_students) {
+    $stmt_students->bind_param("i", $class_id);
+    $stmt_students->execute();
+    $result_students = $stmt_students->get_result();
+    while ($row = $result_students->fetch_assoc()) {
+        $students[] = $row;
+    }
+    $stmt_students->close();
+} else {
+    error_log("Failed to prepare statement for students: " . $mysqli->error);
+}
+
+// **ปรับปรุงตรงนี้: ดึงรายวิชาจาก enrollments (วิชาที่มีการลงทะเบียนและมีคะแนนจริงในห้องนี้)**
+$subjects_in_class = [];
+$stmt_subjects = $mysqli->prepare("SELECT DISTINCT sub.subject_id, sub.subject_code, sub.subject_name, sub.credits FROM subjects sub JOIN enrollments e ON sub.subject_id = e.subject_id WHERE e.class_id = ? ORDER BY sub.subject_code ASC");
+if ($stmt_subjects) {
+    $stmt_subjects->bind_param("i", $class_id);
+    $stmt_subjects->execute();
+    $result_subjects = $stmt_subjects->get_result();
+    while ($row = $result_subjects->fetch_assoc()) {
+        $subjects_in_class[] = $row;
+    }
+    $stmt_subjects->close();
+} else {
+    error_log("Failed to prepare statement for subjects in class: " . $mysqli->error);
+}
+
+// ดึงคะแนนและเกรดทั้งหมดสำหรับห้องนี้ จัดเก็บใน $grades_map[student_id][subject_id]
 $grades_map = [];
-$grade_result = $mysqli->query("SELECT student_id, subject_id, score, grade, grade_point FROM enrollments WHERE class_id = $class_id");
-while($row = $grade_result->fetch_assoc()) {
-    $grades_map[$row['student_id']][$row['subject_id']] = $row;
+$stmt_grades = $mysqli->prepare("SELECT student_id, subject_id, score, grade, grade_point FROM enrollments WHERE class_id = ?");
+if ($stmt_grades) {
+    $stmt_grades->bind_param("i", $class_id);
+    $stmt_grades->execute();
+    $result_grades = $stmt_grades->get_result();
+    while($row = $result_grades->fetch_assoc()) {
+        $grades_map[$row['student_id']][$row['subject_id']] = $row;
+    }
+    $stmt_grades->close();
+} else {
+    error_log("Failed to prepare statement for grades map: " . $mysqli->error);
 }
 
 $page_title = "รายงานผลการเรียน";
@@ -324,6 +420,12 @@ else { require_once 'includes/teacher_header.php'; }
             max-width: 45px;
         }
         
+        .col-summary {
+            width: 60px;
+            min-width: 60px;
+            max-width: 60px;
+        }
+        
         .content-wrapper {
             max-width: calc(100vw - 200px); /* ปรับให้เหมาะกับ sidebar ที่เล็กลง */
         }
@@ -371,6 +473,7 @@ else { require_once 'includes/teacher_header.php'; }
     }
 </style>
 <?php
+// ส่วนนี้คือการเรียกใช้ sidebar และ header/footer ซึ่งอยู่ใน includes
 if ($is_admin) { require_once 'includes/admin_sidebar.php'; }
 else { require_once 'includes/teacher_sidebar.php'; }
 ?>
@@ -383,7 +486,7 @@ else { require_once 'includes/teacher_sidebar.php'; }
                     <button onclick="window.print();" class="btn btn-success btn-print">
                         <i class="fas fa-print me-1"></i>พิมพ์รายงาน
                     </button>
-                    <a href="<?php echo $is_admin ? 'report_class_grades.php' : 'teacher_homeroom_report.php'; ?>" class="btn btn-secondary">
+                    <a href="<?php echo $is_admin ? 'report_grades.php' : 'report_grades.php'; ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i>กลับไปหน้ารายการ
                     </a>
                 </div>
@@ -391,21 +494,24 @@ else { require_once 'includes/teacher_sidebar.php'; }
             
             <div class="printable-area">
                 <div class="text-center mb-4">
-                    <h4>ผลการเรียนประจำภาคเรียน <?php echo htmlspecialchars($class_info['academic_year_name']); ?></h4>
-                    <h5>ห้องเรียน <?php echo htmlspecialchars($class_info['class_name']); ?></h5>
+                    <h4>ผลการเรียนประจำภาคเรียน <?php echo htmlspecialchars($class_info['academic_year_name'] ?? 'ไม่ระบุปีการศึกษา'); ?></h4>
+                    <h5>ห้องเรียน <?php echo htmlspecialchars($class_info['class_name'] ?? 'ไม่ระบุห้องเรียน'); ?></h5>
                 </div>
                 <div class="card">
                     <div class="card-body p-2">
                         <div class="table-container">
                             <table class="table table-bordered grade-table">
                                 <thead class="table-light text-center">
-                                     <tr>
+                                    <tr>
                                         <th class="align-middle col-number" rowspan="2">#</th>
                                         <th class="align-middle col-student-code" rowspan="2">รหัสนักเรียน</th>
                                         <th class="align-middle col-student-name" rowspan="2">ชื่อ-นามสกุล</th>
-                                        <?php foreach($subjects_in_class as $subject): ?>
+                                        <?php 
+                                        // สร้าง Header สำหรับแต่ละวิชาแบบ Dynamic
+                                        foreach($subjects_in_class as $subject): ?>
                                             <th colspan="2" class="subject-header">
                                                 <div class="subject-name" title="<?php echo htmlspecialchars($subject['subject_name']); ?>">
+                                                    <?php echo htmlspecialchars($subject['subject_code']); ?><br>
                                                     <?php echo htmlspecialchars($subject['subject_name']); ?>
                                                 </div>
                                             </th>
@@ -415,7 +521,9 @@ else { require_once 'includes/teacher_sidebar.php'; }
                                         <th class="align-middle col-summary" rowspan="2">เกรดเฉลี่ย</th>
                                     </tr>
                                     <tr>
-                                        <?php foreach($subjects_in_class as $subject): ?>
+                                        <?php 
+                                        // สร้าง Header "คะแนน" และ "เกรด" ใต้วิชา
+                                        foreach($subjects_in_class as $subject): ?>
                                             <th class="subject-header col-subject-data">คะแนน</th>
                                             <th class="subject-header col-subject-data">เกรด</th>
                                         <?php endforeach; ?>
@@ -423,7 +531,7 @@ else { require_once 'includes/teacher_sidebar.php'; }
                                 </thead>
                                 <tbody>
                                     <?php if(empty($students)): ?>
-                                        <tr><td colspan="<?php echo (count($subjects_in_class) * 2) + 6; ?>" class="text-center py-3">ไม่พบนักเรียนในห้องนี้</td></tr>
+                                        <tr><td colspan="<?php echo (count($subjects_in_class) * 2) + 5; ?>" class="text-center py-3">ไม่พบนักเรียนในห้องนี้</td></tr>
                                     <?php else: ?>
                                         <?php foreach($students as $index => $student): ?>
                                         <tr>
@@ -434,38 +542,51 @@ else { require_once 'includes/teacher_sidebar.php'; }
                                                 <?php echo htmlspecialchars($student['prefix'].$student['first_name'].' '.$student['last_name']); ?>
                                             </td>
                                             <?php
-                                                $student_total_credits = 0; $student_total_points = 0; $student_total_score = 0; $subjects_with_scores = 0;
+                                                $student_total_credits = 0; 
+                                                $student_total_points = 0; 
+                                                $student_total_score = 0; 
+                                                $subjects_with_scores_count = 0; // นับเฉพาะวิชาที่มีคะแนน
+
                                                 foreach($subjects_in_class as $subject): 
                                                     $grade_info = $grades_map[$student['student_id']][$subject['subject_id']] ?? null;
-                                                    $display_score = '-'; $display_grade = '-';
+                                                    $display_score = '-'; 
+                                                    $display_grade = '-';
+                                                    
                                                     if ($grade_info && isset($grade_info['score']) && is_numeric($grade_info['score'])) {
                                                         $score = (float)$grade_info['score'];
                                                         $display_score = number_format($score, 0);
+                                                        
+                                                        // เพิ่มคะแนนดิบที่ได้ (ไม่รวมวิชาที่ไม่ได้ลงทะเบียน/ไม่มีคะแนน)
                                                         $student_total_score += $score;
-                                                        $subjects_with_scores++;
+                                                        $subjects_with_scores_count++; // นับวิชาที่มีคะแนน
+
                                                         $calculated_grade = calculate_grade_from_score($score, $subject['credits']);
                                                         if ($calculated_grade['grade_point'] !== null) {
+                                                            // ถ้ามี grade_point แสดงเป็นตัวเลขเกรด, ถ้าเป็น 0.00 ให้แสดง 'ร'
                                                             $display_grade = ($calculated_grade['grade_point'] == 0.00) ? 'ร' : number_format($calculated_grade['grade_point'], 2);
                                                         } else {
+                                                            // ถ้าไม่มี grade_point (เช่น วิชาไม่มีหน่วยกิต) ให้แสดง 'ผ' หรือ 'มผ'
                                                             $display_grade = $calculated_grade['grade'];
                                                         }
+                                                        
+                                                        // สะสมหน่วยกิตและคะแนนสำหรับคำนวณ GPA (เฉพาะวิชาที่มีหน่วยกิตและ grade_point ไม่ใช่ null)
                                                         if ((float)$subject['credits'] > 0 && $calculated_grade['grade_point'] !== null) {
                                                             $student_total_credits += $subject['credits'];
                                                             $student_total_points += ($calculated_grade['grade_point'] * $subject['credits']);
                                                         }
                                                     }
-                                            ?>
-                                                <td class="text-center col-subject-data"><?php echo $display_score; ?></td>
-                                                <td class="text-center col-subject-data fw-bold"><?php echo $display_grade; ?></td>
-                                            <?php endforeach; 
-                                                $total_subjects_count = count($subjects_in_class);
-                                                $student_percentage = ($total_subjects_count > 0) ? ($student_total_score / $total_subjects_count) : 0;
+                                                ?>
+                                                    <td class="text-center col-subject-data"><?php echo $display_score; ?></td>
+                                                    <td class="text-center col-subject-data fw-bold"><?php echo $display_grade; ?></td>
+                                                <?php endforeach; 
+                                                // คำนวณร้อยละและเกรดเฉลี่ยรวมของนักเรียนคนนี้
+                                                $student_percentage = ($subjects_with_scores_count > 0) ? ($student_total_score / $subjects_with_scores_count) : 0;
                                                 $student_gpa = ($student_total_credits > 0) ? ($student_total_points / $student_total_credits) : 0;
-                                            ?>
-                                            <td class="text-center col-summary table-primary fw-bold"><?php echo number_format($student_total_score, 0); ?></td>
-                                            <td class="text-center col-summary table-success fw-bold"><?php echo number_format($student_percentage, 2); ?></td>
-                                            <td class="text-center col-summary table-warning fw-bold"><?php echo number_format($student_gpa, 2); ?></td>
-                                        </tr>
+                                                ?>
+                                                <td class="text-center col-summary table-primary fw-bold"><?php echo number_format($student_total_score, 0); ?></td>
+                                                <td class="text-center col-summary table-success fw-bold"><?php echo number_format($student_percentage, 2); ?></td>
+                                                <td class="text-center col-summary table-warning fw-bold"><?php echo number_format($student_gpa, 2); ?></td>
+                                            </tr>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </tbody>
@@ -493,31 +614,53 @@ else { require_once 'includes/teacher_sidebar.php'; }
                             <div class="card-header"><h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>สถิติห้องเรียน</h6></div>
                             <div class="card-body p-3">
                                 <?php
-                                $total_students = count($students); $total_subjects = count($subjects_in_class); $class_total_score = 0; $class_total_gpa = 0; $students_with_gpa = 0;
+                                $total_students = count($students); 
+                                $total_subjects_in_class = count($subjects_in_class); // จำนวนวิชาที่มีในห้องนี้จริงๆ
+
+                                $class_total_percentage_sum = 0; // ผลรวมร้อยละของนักเรียนทุกคน
+                                $class_total_gpa_sum = 0;      // ผลรวม GPA ของนักเรียนทุกคน
+                                $students_eligible_for_gpa = 0; // จำนวนนักเรียนที่มีวิชาให้คำนวณ GPA
+
                                 foreach($students as $student) {
-                                    $student_total_credits = 0; $student_total_points = 0; $student_score_sum = 0;
+                                    $student_current_credits = 0; 
+                                    $student_current_points = 0; 
+                                    $student_current_score_sum = 0;
+                                    $student_current_subjects_with_scores_count = 0;
+
                                     foreach($subjects_in_class as $subject) {
                                         $grade_info = $grades_map[$student['student_id']][$subject['subject_id']] ?? null;
                                         if ($grade_info && isset($grade_info['score']) && is_numeric($grade_info['score'])) {
                                             $score = (float)$grade_info['score'];
-                                            $student_score_sum += $score;
+                                            $student_current_score_sum += $score;
+                                            $student_current_subjects_with_scores_count++;
+                                            
                                             $calculated_grade = calculate_grade_from_score($score, $subject['credits']);
                                             if ((float)$subject['credits'] > 0 && $calculated_grade['grade_point'] !== null) {
-                                                $student_total_credits += $subject['credits'];
-                                                $student_total_points += ($calculated_grade['grade_point'] * $subject['credits']);
+                                                $student_current_credits += $subject['credits'];
+                                                $student_current_points += ($calculated_grade['grade_point'] * $subject['credits']);
                                             }
                                         }
                                     }
-                                    if ($total_subjects > 0) { $class_total_score += ($student_score_sum / $total_subjects); }
-                                    if ($student_total_credits > 0) { $class_total_gpa += ($student_total_points / $student_total_credits); $students_with_gpa++; }
+                                    
+                                    // คำนวณร้อยละของนักเรียนแต่ละคนสำหรับสถิติห้อง
+                                    if ($student_current_subjects_with_scores_count > 0) {
+                                        $class_total_percentage_sum += ($student_current_score_sum / $student_current_subjects_with_scores_count);
+                                    }
+
+                                    // คำนวณ GPA ของนักเรียนแต่ละคนสำหรับสถิติห้อง
+                                    if ($student_current_credits > 0) {
+                                        $class_total_gpa_sum += ($student_current_points / $student_current_credits);
+                                        $students_eligible_for_gpa++;
+                                    }
                                 }
-                                $class_avg_score = ($total_students > 0) ? ($class_total_score / $total_students) : 0;
-                                $class_avg_gpa = ($students_with_gpa > 0) ? ($class_total_gpa / $students_with_gpa) : 0;
+
+                                $class_avg_percentage = ($total_students > 0) ? ($class_total_percentage_sum / $total_students) : 0;
+                                $class_avg_gpa = ($students_eligible_for_gpa > 0) ? ($class_total_gpa_sum / $students_eligible_for_gpa) : 0;
                                 ?>
                                 <small>
                                     <strong>จำนวนนักเรียน:</strong> <?php echo $total_students; ?> คน<br>
-                                    <strong>จำนวนวิชา:</strong> <?php echo $total_subjects; ?> วิชา<br>
-                                    <strong>คะแนนเฉลี่ยห้อง:</strong> <?php echo number_format($class_avg_score, 2); ?>%<br>
+                                    <strong>จำนวนวิชาในห้องนี้:</strong> <?php echo $total_subjects_in_class; ?> วิชา<br>
+                                    <strong>ร้อยละเฉลี่ยห้อง:</strong> <?php echo number_format($class_avg_percentage, 2); ?>%<br>
                                     <strong>เกรดเฉลี่ยห้อง:</strong> <?php echo number_format($class_avg_gpa, 2); ?>
                                 </small>
                             </div>
@@ -530,6 +673,10 @@ else { require_once 'includes/teacher_sidebar.php'; }
 </div>
 
 <?php 
+// ส่วนนี้คือการเรียกใช้ footer
 if ($is_admin) { require_once 'includes/admin_footer.php'; }
 else { require_once 'includes/teacher_footer.php'; }
+
+// ปิดการเชื่อมต่อฐานข้อมูล
+$mysqli->close();
 ?>

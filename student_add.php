@@ -38,21 +38,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($password)) $errors['password'] = "กรุณากรอกรหัสผ่าน";
     if (empty($first_name)) $errors['first_name'] = "กรุณากรอกชื่อจริง";
     
+    // Retrieve the current academic year ID
+    $current_academic_year_id = null;
+    $academic_year_query = $mysqli->query("SELECT acad_year_id FROM academic_years WHERE is_current_year = 1 LIMIT 1");
+    if ($academic_year_query && $academic_year_row = $academic_year_query->fetch_assoc()) {
+        $current_academic_year_id = $academic_year_row['acad_year_id'];
+    } else {
+        $errors['academic_year'] = "ไม่พบปีการศึกษาปัจจุบัน. กรุณากำหนดปีการศึกษาปัจจุบัน.";
+    }
+
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         
-        $sql = "INSERT INTO students (student_code, username, password, prefix, first_name, last_name, id_card_number, class_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        // SQL for students table (without class_id)
+        $sql_student = "INSERT INTO students (student_code, username, password, prefix, first_name, last_name, id_card_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
-        if ($stmt = $mysqli->prepare($sql)) {
-            $stmt->bind_param("sssssssi", $student_code, $username, $hashed_password, $prefix, $first_name, $last_name, $id_card_number, $class_id);
-            if ($stmt->execute()) {
-                set_session_message('เพิ่มข้อมูลนักเรียนสำเร็จ!', 'success');
-                header("location: student_list.php");
-                exit();
+        if ($stmt_student = $mysqli->prepare($sql_student)) {
+            $stmt_student->bind_param("sssssss", $student_code, $username, $hashed_password, $prefix, $first_name, $last_name, $id_card_number);
+            
+            if ($stmt_student->execute()) {
+                $new_student_id = $mysqli->insert_id; // Get the ID of the newly inserted student
+                
+                // If class_id is provided and current academic year is found, insert into student_classes
+                if ($class_id !== null && $current_academic_year_id !== null) {
+                    $enrollment_date = date('Y-m-d'); // Current date for enrollment
+                    $status = 'Active'; // Default status
+                    
+                    $sql_student_class = "INSERT INTO student_classes (student_id, class_id, academic_year_id, enrollment_date, status) VALUES (?, ?, ?, ?, ?)";
+                    
+                    if ($stmt_student_class = $mysqli->prepare($sql_student_class)) {
+                        $stmt_student_class->bind_param("iisss", $new_student_id, $class_id, $current_academic_year_id, $enrollment_date, $status);
+                        if ($stmt_student_class->execute()) {
+                            set_session_message('เพิ่มข้อมูลนักเรียนและกำหนดห้องเรียนสำเร็จ!', 'success');
+                            header("location: student_list.php");
+                            exit();
+                        } else {
+                            set_session_message('เพิ่มข้อมูลนักเรียนสำเร็จ แต่เกิดข้อผิดพลาดในการกำหนดห้องเรียน: '.$stmt_student_class->error, 'warning');
+                            header("location: student_list.php");
+                            exit();
+                        }
+                        $stmt_student_class->close();
+                    } else {
+                        set_session_message('เกิดข้อผิดพลาดในการเตรียมคำสั่งกำหนดห้องเรียน: '.$mysqli->error, 'danger');
+                        header("location: student_list.php");
+                        exit();
+                    }
+                } else {
+                    set_session_message('เพิ่มข้อมูลนักเรียนสำเร็จ! (ไม่ได้กำหนดห้องเรียน หรือไม่พบปีการศึกษาปัจจุบัน)', 'success');
+                    header("location: student_list.php");
+                    exit();
+                }
             } else {
-                set_session_message('เกิดข้อผิดพลาดในการบันทึก: '.$stmt->error, 'danger');
+                set_session_message('เกิดข้อผิดพลาดในการบันทึกข้อมูลนักเรียน: '.$stmt_student->error, 'danger');
             }
-            $stmt->close();
+            $stmt_student->close();
+        } else {
+            set_session_message('เกิดข้อผิดพลาดในการเตรียมคำสั่งบันทึกข้อมูลนักเรียน: '.$mysqli->error, 'danger');
         }
     } else {
         set_session_message('โปรดตรวจสอบข้อมูลในฟอร์มให้ถูกต้อง', 'warning');
@@ -93,6 +134,11 @@ require_once 'includes/admin_sidebar.php';
                             <label class="form-label">ห้องเรียน</label>
                             <select name="class_id" class="form-select"><option value="">-- ไม่กำหนดห้องเรียน --</option><?php foreach ($classes as $class): ?><option value="<?php echo $class['class_id']; ?>" <?php if($class_id == $class['class_id']) echo 'selected'; ?>><?php echo htmlspecialchars($class['class_code'] . ' - ' . $class['class_name']); ?></option><?php endforeach; ?></select>
                         </div>
+                        <?php if (isset($errors['academic_year'])): ?>
+                            <div class="alert alert-danger" role="alert">
+                                <?php echo $errors['academic_year']; ?>
+                            </div>
+                        <?php endif; ?>
                         <hr class="my-4">
                         <div class="d-flex justify-content-end gap-2"><a href="student_list.php" class="btn btn-secondary px-4">ยกเลิก</a><button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i>บันทึก</button></div>
                     </form>

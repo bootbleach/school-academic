@@ -30,6 +30,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["student_csv"])) {
         if ($file_type !== 'text/plain' && $file_type !== 'text/csv') {
              set_session_message('รูปแบบไฟล์ไม่ถูกต้อง กรุณาอัปโหลดไฟล์ .csv เท่านั้น', 'danger');
         } else {
+            // --- ดึง academic_year_id ปัจจุบัน ---
+            $current_academic_year_id = null;
+            $academic_year_query = $mysqli->query("SELECT acad_year_id FROM academic_years WHERE is_current_year = 1 LIMIT 1");
+            if ($academic_year_query && $academic_year_row = $academic_year_query->fetch_assoc()) {
+                $current_academic_year_id = $academic_year_row['acad_year_id'];
+            } else {
+                set_session_message('ไม่พบปีการศึกษาปัจจุบัน กรุณากำหนดปีการศึกษาปัจจุบันในระบบก่อน', 'danger');
+                header("Location: student_bulk_add.php");
+                exit();
+            }
+
             $mysqli->begin_transaction(); // << เริ่ม Transaction
             try {
                 $handle = fopen($file_name, "r");
@@ -37,49 +48,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["student_csv"])) {
                 $row_number = 1;
                 $success_count = 0;
 
-                // เตรียมคำสั่ง SQL แค่ครั้งเดียวเพื่อประสิทธิภาพ
-                $sql = "INSERT INTO students (student_code, username, password, prefix, first_name, last_name, id_card_number, class_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-                $stmt = $mysqli->prepare($sql);
+                // เตรียมคำสั่ง SQL สำหรับ students (ไม่มี class_id)
+                $sql_student = "INSERT INTO students (student_code, username, password, prefix, first_name, last_name, id_card_number) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $stmt_student = $mysqli->prepare($sql_student);
+
+                // เตรียมคำสั่ง SQL สำหรับ student_classes
+                $sql_student_class = "INSERT INTO student_classes (student_id, class_id, academic_year_id, enrollment_date, status) VALUES (?, ?, ?, ?, ?)";
+                $stmt_student_class = $mysqli->prepare($sql_student_class);
 
                 while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                     if ($is_header) { $is_header = false; continue; } // ข้ามบรรทัดแรก (Header)
                     
                     $row_number++;
                     if (count($data) < 7) {
-                        throw new Exception("ข้อมูลในแถวที่ $row_number ไม่ครบถ้วน");
+                        throw new Exception("ข้อมูลในแถวที่ $row_number ไม่ครบถ้วน (ต้องมี 7 คอลัมน์)");
                     }
 
-                    $student_code = $data[0];
-                    $username = $data[1];
-                    $password = $data[2];
-                    $prefix = $data[3];
-                    $first_name = $data[4];
-                    $last_name = $data[5];
-                    $id_card_number = $data[6];
+                    $student_code = trim($data[0]);
+                    $username = trim($data[1]);
+                    $password = $data[2]; // ไม่ต้อง trim password
+                    $prefix = trim($data[3]);
+                    $first_name = trim($data[4]);
+                    $last_name = trim($data[5]);
+                    $id_card_number = trim($data[6]);
                     
                     // Validation ในแต่ละแถว
-                    if (empty($student_code) || empty($username) || empty($password) || empty($first_name)) {
-                        throw new Exception("ข้อมูลที่จำเป็น (รหัสนักเรียน, username, password, ชื่อจริง) ในแถวที่ $row_number เป็นค่าว่าง");
+                    if (empty($student_code) || empty($username) || empty($password) || empty($first_name) || empty($id_card_number)) {
+                        throw new Exception("ข้อมูลที่จำเป็น (รหัสนักเรียน, username, password, ชื่อจริง, เลขประจำตัวประชาชน) ในแถวที่ $row_number เป็นค่าว่าง");
                     }
 
                     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-                    $stmt->bind_param("sssssssi", $student_code, $username, $hashed_password, $prefix, $first_name, $last_name, $id_card_number, $class_id);
-                    if (!$stmt->execute()) {
-                        throw new Exception("ไม่สามารถบันทึกข้อมูลแถวที่ $row_number ได้: " . $stmt->error);
+                    // บันทึกเข้าตาราง students
+                    $stmt_student->bind_param("sssssss", $student_code, $username, $hashed_password, $prefix, $first_name, $last_name, $id_card_number);
+                    if (!$stmt_student->execute()) {
+                        throw new Exception("ไม่สามารถบันทึกข้อมูลนักเรียนแถวที่ $row_number ได้: " . $stmt_student->error);
                     }
+                    $new_student_id = $mysqli->insert_id; // ดึง ID ของนักเรียนที่เพิ่งเพิ่มเข้ามา
+
+                    // บันทึกเข้าตาราง student_classes
+                    $enrollment_date = date('Y-m-d'); // วันที่ลงทะเบียน
+                    $status = 'Active'; // สถานะเริ่มต้น
+                    $stmt_student_class->bind_param("iisss", $new_student_id, $class_id, $current_academic_year_id, $enrollment_date, $status);
+                    if (!$stmt_student_class->execute()) {
+                        throw new Exception("ไม่สามารถกำหนดห้องเรียนให้นักเรียนแถวที่ $row_number ได้: " . $stmt_student_class->error);
+                    }
+
                     $success_count++;
                 }
                 
                 fclose($handle);
-                $stmt->close();
+                $stmt_student->close();
+                $stmt_student_class->close();
 
                 $mysqli->commit(); // << ยืนยันการบันทึกทั้งหมดเมื่อไม่มี Error
-                set_session_message("นำเข้าข้อมูลนักเรียนสำเร็จ $success_count รายการ", 'success');
+                set_session_message("นำเข้าข้อมูลนักเรียนสำเร็จ $success_count รายการ และกำหนดห้องเรียนเรียบร้อย", 'success');
 
             } catch (Exception $e) {
                 $mysqli->rollback(); // << ยกเลิกการบันทึกทั้งหมดหากมีข้อผิดพลาด
-                set_session_message("เกิดข้อผิดพลาด: " . $e->getMessage(), 'danger');
+                set_session_message("เกิดข้อผิดพลาดในการนำเข้าข้อมูล: " . $e->getMessage(), 'danger');
             }
         }
         header("Location: student_bulk_add.php");
@@ -114,6 +141,9 @@ require_once 'includes/admin_sidebar.php';
                         <li>บันทึกไฟล์เป็นชนิด **CSV UTF-8 (Comma delimited) (.csv)**</li>
                         <li>เลือกห้องเรียนที่ต้องการด้านล่าง และอัปโหลดไฟล์ที่เตรียมไว้</li>
                     </ol>
+                    <div class="mb-3">
+                        <a href="generate_student_csv_template.php" class="btn btn-info btn-sm"><i class="fas fa-file-csv me-2"></i>ดาวน์โหลด CSV Template</a>
+                    </div>
                     <hr>
                     <form action="student_bulk_add.php" method="post" enctype="multipart/form-data">
                         <div class="row">
@@ -131,6 +161,7 @@ require_once 'includes/admin_sidebar.php';
                                 <input type="file" name="student_csv" id="student_csv" class="form-control" accept=".csv" required>
                             </div>
                         </div>
+                        
                         <div class="mt-3 text-end">
                             <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-upload me-2"></i>เริ่มนำเข้าข้อมูล</button>
                         </div>
