@@ -28,7 +28,7 @@
             <a href="class_list.php" class="list-group-item list-group-item-action bg-transparent text-white py-2 px-3 small">
                 <i class="fas fa-school fa-fw me-2"></i>จัดการคลาสเรียน
             </a>
-             <a href="manage_class_subjects.php" class="list-group-item list-group-item-action bg-transparent text-white py-2 px-3 small">
+             <a href="manage_class.php" class="list-group-item list-group-item-action bg-transparent text-white py-2 px-3 small">
                 <i class="fas fa-school fa-fw me-2"></i>จัดการวิชาสำหรับคลาส
             </a>
             <a href="admin_enter_scores.php" class="list-group-item list-group-item-action bg-transparent text-white py-2 px-3 small">
